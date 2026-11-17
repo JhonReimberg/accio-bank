@@ -1,4 +1,10 @@
-# Vela — banco digital (projeto de portfólio)
+# AccioBank — banco digital (projeto de portfólio)
+
+<p align="center">
+  <img src="frontend/public/coruja.svg" alt="A coruja mascote do AccioBank" width="120" />
+</p>
+
+> **Accio** é o feitiço que chama as coisas até você. O AccioBank chama o seu dinheiro: um banco digital com tema noturno de magia, uma coruja como mascote e as regras de um banco de verdade por baixo.
 
 [![CI](https://github.com/JhonReimberg/vela-banco-digital/actions/workflows/ci.yml/badge.svg)](https://github.com/JhonReimberg/vela-banco-digital/actions/workflows/ci.yml)
 ![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)
@@ -22,19 +28,39 @@
 | Testes | xUnit · Testcontainers (PostgreSQL real) |
 | Infra | Docker Compose · nginx · GitHub Actions |
 
-> **Projeto fictício, feito para portfólio.** "Vela" não é uma instituição real e não tem relação com nenhum banco. Os CPFs, chaves e documentos usados são gerados para teste.
+> **Projeto fictício, feito para portfólio.** "AccioBank" não é uma instituição real e não tem relação com nenhum banco. Os CPFs, chaves e documentos usados são gerados para teste. O projeto começou com o nome "Vela" (por isso o repositório e os e-mails de demonstração ainda usam esse nome).
 
 Um banco digital com regras de negócio reais: **ledger de partidas dobradas**, **controle de concorrência**, **idempotência**, **PIX** (chaves, QR Code, copia e cola, devolução, agendamento e limites noturnos), **onboarding com KYC**, **2FA**, **senha transacional** e **crédito** (score explicável, motor de elegibilidade, empréstimo pela Tabela Price, cheque especial e back-office), **cartões** (fatura, parcelamento, rotativo), **investimentos** (CDB, caixinhas, IR regressivo), **antifraude**, **boletos** e **notificações em tempo real** (SignalR). As três fases do [roadmap](#roadmap) estão prontas.
 
-| Início (desktop) | PIX no celular | Receber com QR Code |
+| Início no celular | Cofres (Usar · Guardar) | Meus cartões |
 | --- | --- | --- |
-| ![Início](docs/screenshots/home.png) | ![Pagar com PIX](docs/screenshots/pix-pagar-mobile.png) | ![QR Code PIX](docs/screenshots/pix-receber.png) |
-| **Crédito: o que falta** | **Simulação (Price, IOF, CET)** | **Back-office** |
-| ![Requisitos do empréstimo](docs/screenshots/credito-bloqueado.png) | ![Simulação](docs/screenshots/credito-simulacao.png) | ![Painel do back-office](docs/screenshots/backoffice-painel.png) |
-| **Cartões e simulador de compra** | **Fatura** | **Investimentos (prévia de IR/IOF)** |
-| ![Cartões](docs/screenshots/cartoes.png) | ![Fatura](docs/screenshots/fatura.png) | ![Investimentos](docs/screenshots/investimentos.png) |
-| **Fila antifraude** | **Notificação em tempo real** | |
-| ![Antifraude](docs/screenshots/backoffice-antifraude.png) | ![Notificação via SignalR](docs/screenshots/notificacao-tempo-real.png) | |
+| ![Início no celular](docs/screenshots/home-mobile.png) | ![Cofres](docs/screenshots/cofres-mobile.png) | ![Cartões](docs/screenshots/cartoes.png) |
+| **Investimentos** | **PIX no celular** | **Menu** |
+| ![Investimentos](docs/screenshots/investimentos.png) | ![Pagar com PIX](docs/screenshots/pix-pagar-mobile.png) | ![Menu](docs/screenshots/menu-mobile.png) |
+
+| Início (desktop) | Entrar |
+| --- | --- |
+| ![Início no desktop](docs/screenshots/home.png) | ![Tela de login com a coruja](docs/screenshots/login.png) |
+| **Simulação de empréstimo (Price, IOF, CET)** | **Fatura do cartão** |
+| ![Simulação](docs/screenshots/credito-simulacao.png) | ![Fatura](docs/screenshots/fatura.png) |
+| **Receber com QR Code** | **Design system** |
+| ![QR Code PIX](docs/screenshots/pix-receber.png) | ![Design system](docs/screenshots/design-system.png) |
+| **Back-office: painel** | **Back-office: antifraude** |
+| ![Painel do back-office](docs/screenshots/backoffice-painel.png) | ![Antifraude](docs/screenshots/backoffice-antifraude.png) |
+
+## Visual e experiência
+
+- **Tema noturno de magia, sempre escuro:** céu estrelado, texto cor de pergaminho, dourado como cor da marca e vinho para dar profundidade. Títulos em Cinzel (letras de inscrição) e interface em Manrope.
+- **Mascote:** uma coruja branca, que aparece no logo, no favicon, no login, nas dicas ("Recado da coruja") e nas telas vazias, com movimentos leves (flutuar, pulinho, inclinar a cabeça).
+- **Cartões com cara de 3D:** débito em metal preto, crédito em folha dourada e virtual em vidro, com chip, símbolo de aproximação e um reflexo que acompanha o ponteiro.
+- **Celular e desktop diferentes:**
+  - no celular, o Início tem uma faixa com avatar, olho para esconder valores, ajuda e menu; ao rolar, ela encolhe e mostra a marca. A navegação fica numa barra flutuante só com ícones (Início, Investimentos, Benefícios, Recarga);
+  - no desktop, menu lateral agrupado e o Início em duas colunas.
+- **Cada passo no seu lugar:** o Início mostra resumos (saldo, cartão, empréstimo, investimentos, últimas movimentações) e cada um abre a própria tela. Cada área tem uma tela-menu e cada operação uma tela separada: cartões (lista → detalhe → simular compra, pedir cartão, ativar crédito), investimentos (visão geral → produto → aplicar, resgatar, empréstimo com garantia), pagamentos, empréstimos e segurança.
+- **Conta com abas Usar e Guardar**, menu completo, perfil, configurações, ajuda com perguntas frequentes e uma área de benefícios (ainda sem programa de vantagens: aparece como "em breve").
+- **Foto de perfil:** escolhida no Perfil, recortada em quadrado e salva pela API, então aparece em qualquer aparelho.
+- **Design system vivo** em `/design-system` (cores, tipografia, cartões, mascote e componentes), aberto sem login.
+- **Acessibilidade:** contraste AA no texto, foco visível, rótulos nos botões só de ícone e animações desligadas para quem pede menos movimento.
 
 ## Rodar com um comando
 
@@ -121,6 +147,7 @@ Também dá para abrir uma conta nova pelo app. No modo demo, a análise de KYC 
 - **Tempo real:** notificações por **SignalR** (PIX recebido, parcela debitada, transação retida, boleto não pago...), com aviso na tela e atualização automática do saldo.
 - **Boletos:** emissão para cobrar (linha digitável e código de barras no padrão FEBRABAN, com banco fictício), pagamento validando os dígitos verificadores (módulo 10 e 11) e o fator de vencimento, e **agendamento** até o vencimento.
 - **Recarga de celular** simulada (operadoras fictícias), debitada pelo ledger.
+- **Foto de perfil:** `PUT/GET/DELETE /api/account/photo`, só JPG ou PNG de até 2 MB, conferidos pelo conteúdo do arquivo, guardados fora do banco e registrados na auditoria.
 
 ## Arquitetura
 
@@ -231,11 +258,11 @@ Toda notificação gravada gera um evento no outbox; o handler empurra a mensage
 ## Testes e CI
 
 ```bash
-cd backend && dotnet test   # 153 unitários + 68 de integração
+cd backend && dotnet test   # 153 unitários + 71 de integração
 ```
 
 - **Unitários:** regras de domínio, como cálculo de CPF, BR Code e CRC16, períodos e carência de limites, agendamento mensal (31/01 → 28/02 → 31/03), devoluções, bloqueio de PIN, Tabela Price/IOF/CET, IR e IOF regressivos, Luhn, fatura e rotativo, linha digitável de boleto e regras antifraude.
-- **Integração:** a API real contra um **PostgreSQL de verdade via Testcontainers**, cobrindo os fluxos de dinheiro, concorrência, idempotência, segurança, KYC, PIX, crédito, cartões, investimentos, antifraude, boletos e o push via SignalR. Os testes com tempo (rotativo, agendamentos, rendimento) controlam o relógio de negócio, e vários terminam conferindo a conciliação do ledger.
+- **Integração:** a API real contra um **PostgreSQL de verdade via Testcontainers**, cobrindo os fluxos de dinheiro, concorrência, idempotência, segurança, KYC, PIX, crédito, cartões, investimentos, antifraude, boletos, foto de perfil e o push via SignalR. Os testes com tempo (rotativo, agendamentos, rendimento) controlam o relógio de negócio, e vários terminam conferindo a conciliação do ledger.
 - **GitHub Actions** (`.github/workflows/ci.yml`): build, testes, lint e build do frontend em todo push e PR.
 
 ## Desenvolvimento local
@@ -257,9 +284,11 @@ backend/
   src/Bank.Api              endpoints e pipeline HTTP
   tests/                    unitários e integração (Testcontainers)
 frontend/src/
-  lib/                      cliente HTTP, sessão, formatação, tipos
-  pages/                    telas (onboarding, início, extrato, PIX, crédito, cartões,
-                            investimentos, pagamentos, segurança, back-office)
+  components/               layout, componentes de interface, cartão 3D, mascote
+  lib/                      cliente HTTP, sessão, formatação, tipos, foto de perfil
+  pages/                    telas (onboarding, início, conta, extrato, PIX, crédito, cartões,
+                            investimentos, pagamentos, segurança, menu, back-office)
+  index.css                 design system (tokens de cor, tipografia, forma) e estilos
 ```
 
 ## Roadmap
@@ -267,13 +296,16 @@ frontend/src/
 - [x] **Fase 1:** base sólida (conta, segurança, ledger, PIX)
 - [x] **Fase 2:** crédito (motor de elegibilidade, score interno, empréstimo pela Tabela Price, cheque especial, back-office)
 - [x] **Fase 3:** cartões, investimentos (CDB, caixinhas, IR regressivo), crédito com garantia de investimento, antifraude, notificações em tempo real (SignalR), boletos e recarga
+- [x] **Nova identidade:** AccioBank, design system com tema noturno, mascote, navegação no padrão de app de banco e foto de perfil
 
 ## Simplificações conscientes
 
-- Todo PIX é entre contas do próprio Vela; não há integração com o SPI/DICT reais.
+- Todo PIX é entre contas do próprio AccioBank; não há integração com o SPI/DICT reais.
 - Chaves de e-mail e celular não são confirmadas por código.
 - O e-mail é simulado: as mensagens vão para o log estruturado.
 - Boletos de outros bancos e recargas são liquidados contra uma conta interna (não há câmara de compensação nem operadora real).
 - O número completo do cartão fica no banco de dados; um emissor real usa um cofre/tokenização no escopo PCI.
 - O seed não gera o rendimento retroativo dos investimentos: ele começa a aparecer a partir do primeiro job diário.
 - A chave de assinatura dos JWTs e as senhas do `.env` servem só para desenvolvimento.
+- A área de benefícios (cashback, cupons, sorteios) e os produtos "Tesouro e ações" são só vitrine: não existem no backend.
+- Ao trocar a foto de perfil, o arquivo anterior continua no armazenamento (o serviço de arquivos não tem exclusão).
