@@ -8,7 +8,7 @@ dist/
 .idea/
 .env
 appsettings.Development.json
-storage/
+/storage/
 TestResults/
 
 # Local assistant files
