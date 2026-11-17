@@ -989,6 +989,137 @@ namespace Bank.Infrastructure.Persistence.Migrations
                     b.ToTable("kyc_document", (string)null);
                 });
 
+            modelBuilder.Entity("Bank.Domain.Fraud.FraudPolicy", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("AverageMultiplier")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)")
+                        .HasColumnName("average_multiplier");
+
+                    b.Property<decimal>("AverageRuleMinAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("average_rule_min_amount");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("enabled");
+
+                    b.Property<decimal>("NewDeviceAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("new_device_amount");
+
+                    b.Property<int>("VelocityCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("velocity_count");
+
+                    b.HasKey("Id")
+                        .HasName("pk_fraud_policies");
+
+                    b.ToTable("fraud_policies", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_fraud_policies_singleton", "id = 1");
+                        });
+                });
+
+            modelBuilder.Entity("Bank.Domain.Fraud.FraudReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)")
+                        .HasColumnName("description");
+
+                    b.Property<Guid>("HoldId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("hold_id");
+
+                    b.Property<string>("KeyType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("key_type");
+
+                    b.Property<string>("KeyValue")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("key_value");
+
+                    b.Property<Guid>("PayeeAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payee_account_id");
+
+                    b.Property<string>("PayeeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("payee_name");
+
+                    b.Property<Guid?>("PixTransferId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("pix_transfer_id");
+
+                    b.Property<string>("Reasons")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reasons");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reviewed_at");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewed_by");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_fraud_reviews");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_fraud_reviews_account_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_fraud_reviews_user_id");
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("ix_fraud_reviews_status_created_at");
+
+                    b.ToTable("fraud_reviews", (string)null);
+                });
+
             modelBuilder.Entity("Bank.Domain.Investments.Investment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2074,6 +2205,16 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_kyc_document_customers_customer_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Fraud.FraudReview", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_fraud_reviews_accounts_account_id");
                 });
 
             modelBuilder.Entity("Bank.Domain.Investments.Investment", b =>

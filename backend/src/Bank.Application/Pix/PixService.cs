@@ -17,7 +17,13 @@ namespace Bank.Application.Pix;
 /// <param name="BrCode">...a "copia e cola" code. If the code has an amount, it is the amount paid.</param>
 public record PixTransferRequest(string? Key, string? BrCode, decimal? Amount, string? Description, string Pin);
 
-public record PixTransferResponse(Guid Id, string EndToEndId, Guid TransactionId, decimal Amount, string RecipientName, DateTime CreatedAt);
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PixTransferStatus>))]
+public enum PixTransferStatus { Completed, UnderReview }
+
+/// <param name="Id">The PIX id, or the fraud review id when <paramref name="Status"/> is UnderReview.</param>
+public record PixTransferResponse(
+    Guid Id, string EndToEndId, Guid TransactionId, decimal Amount, string RecipientName, DateTime CreatedAt,
+    PixTransferStatus Status = PixTransferStatus.Completed);
 
 public record PixRefundRequest(decimal Amount, string Reason, string Pin);
 
@@ -79,6 +85,7 @@ public class PixService(
     IBankDbContext db,
     ICurrentUser currentUser,
     PixDirectory directory,
+    Fraud.FraudService fraud,
     PixPayments payments,
     LedgerPosting ledger,
     TransactionAuthorizer authorizer,
@@ -113,7 +120,18 @@ public class PixService(
 
         var payee = await directory.FindAsync(key!, ct) ?? throw new NotFoundException("Chave PIX não encontrada.");
         var me = await MeAsync(ct);
-        var pix = await payments.PayAsync(me.AccountId, me.Name, payee, amount!.Value, description?.Trim(), ct);
+        if (payee.AccountId == me.AccountId)
+            throw new DomainException("pix.same_account", "Não é possível fazer um PIX para a própria conta.");
+
+        // Suspicious payments are not sent: the amount is held and an analyst decides.
+        var reasons = await fraud.EvaluatePixAsync(me.AccountId, currentUser.UserId, amount!.Value, ct);
+        if (reasons.Count > 0)
+        {
+            var review = await fraud.HoldPixAsync(me.AccountId, currentUser.UserId, payee, amount.Value, description?.Trim(), reasons, ct);
+            return new PixTransferResponse(review.Id, "", Guid.Empty, amount.Value, payee.Name, review.CreatedAt, PixTransferStatus.UnderReview);
+        }
+
+        var pix = await payments.PayAsync(me.AccountId, me.Name, payee, amount.Value, description?.Trim(), ct);
         return new PixTransferResponse(pix.Id, pix.EndToEndId, pix.LedgerTransactionId, pix.Amount, payee.Name, pix.CreatedAt);
     }
 

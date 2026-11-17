@@ -114,7 +114,7 @@ public class PixScheduleRunner(IBankDbContext db, PixDirectory directory, PixPay
                 .SingleAsync(ct);
             // The schedule advances in the same database transaction as the payment.
             await payments.PayAsync(schedule.PayerAccountId, payerName, payee, schedule.Amount, schedule.Description, ct,
-                schedule.Id, occurrence, alsoInTransaction: () => schedule.Advance(error: null));
+                schedule.Id, occurrence, alsoInTransaction: _ => schedule.Advance(error: null));
             return;
         }
         catch (DomainException e)

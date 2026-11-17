@@ -59,6 +59,7 @@ app.MapPixEndpoints();
 app.MapCreditEndpoints();
 app.MapInvestmentEndpoints();
 app.MapCardEndpoints();
+app.MapFraudEndpoints();
 app.MapOnboardingEndpoints();
 app.MapSecurityEndpoints();
 app.MapNotificationEndpoints();
