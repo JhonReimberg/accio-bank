@@ -27,14 +27,20 @@ public class LedgerPosting(IBankDbContext db, TimeProvider clock)
     }
 
     /// <summary>Like <see cref="ExecuteAsync(IReadOnlyCollection{Guid}, Func{IReadOnlyDictionary{Guid, Account}, DateTime, Task{LedgerTransaction}}, CancellationToken)"/>, but <paramref name="build"/> may decide there is nothing to post (returns null).</summary>
-    public async Task<LedgerTransaction?> ExecuteIfNeededAsync(
+    public Task<LedgerTransaction?> ExecuteIfNeededAsync(
         IReadOnlyCollection<Guid> accountIds,
         Func<IReadOnlyDictionary<Guid, Account>, DateTime, LedgerTransaction?> build,
+        CancellationToken ct) =>
+        ExecuteIfNeededAsync(accountIds, (accounts, now) => Task.FromResult(build(accounts, now)), ct);
+
+    public async Task<LedgerTransaction?> ExecuteIfNeededAsync(
+        IReadOnlyCollection<Guid> accountIds,
+        Func<IReadOnlyDictionary<Guid, Account>, DateTime, Task<LedgerTransaction?>> build,
         CancellationToken ct)
     {
         await using var tx = await db.BeginTransactionAsync(ct);
         var accounts = (await db.LockAccountsAsync(accountIds, ct)).ToDictionary(a => a.Id);
-        var transaction = build(accounts, clock.GetUtcNow().UtcDateTime);
+        var transaction = await build(accounts, clock.GetUtcNow().UtcDateTime);
         if (transaction is null) return null; // disposing the transaction releases the locks
         db.LedgerTransactions.Add(transaction);
         await db.SaveChangesAsync(ct);

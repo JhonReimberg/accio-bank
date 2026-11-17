@@ -320,6 +320,145 @@ namespace Bank.Infrastructure.Persistence.Migrations
                     b.ToTable("audit_logs", (string)null);
                 });
 
+            modelBuilder.Entity("Bank.Domain.Boletos.Boleto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Barcode")
+                        .IsRequired()
+                        .HasMaxLength(44)
+                        .HasColumnType("character varying(44)")
+                        .HasColumnName("barcode");
+
+                    b.Property<Guid>("BeneficiaryAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("beneficiary_account_id");
+
+                    b.Property<string>("BeneficiaryName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("beneficiary_name");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("DigitableLine")
+                        .IsRequired()
+                        .HasMaxLength(47)
+                        .HasColumnType("character varying(47)")
+                        .HasColumnName("digitable_line");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_boletos");
+
+                    b.HasIndex("Barcode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_boletos_barcode");
+
+                    b.HasIndex("BeneficiaryAccountId", "CreatedAt")
+                        .HasDatabaseName("ix_boletos_beneficiary_account_id_created_at");
+
+                    b.ToTable("boletos", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Boletos.BoletoPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Barcode")
+                        .IsRequired()
+                        .HasMaxLength(44)
+                        .HasColumnType("character varying(44)")
+                        .HasColumnName("barcode");
+
+                    b.Property<string>("BeneficiaryName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("beneficiary_name");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("failure_reason");
+
+                    b.Property<Guid?>("LedgerTransactionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ledger_transaction_id");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_at");
+
+                    b.Property<Guid>("PayerAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payer_account_id");
+
+                    b.Property<DateOnly>("ScheduledFor")
+                        .HasColumnType("date")
+                        .HasColumnName("scheduled_for");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_boleto_payments");
+
+                    b.HasIndex("PayerAccountId", "CreatedAt")
+                        .HasDatabaseName("ix_boleto_payments_payer_account_id_created_at");
+
+                    b.HasIndex("Status", "ScheduledFor")
+                        .HasDatabaseName("ix_boleto_payments_status_scheduled_for");
+
+                    b.ToTable("boleto_payments", (string)null);
+                });
+
             modelBuilder.Entity("Bank.Domain.Cards.Card", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2023,6 +2162,26 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_balance_holds_accounts_account_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Boletos.Boleto", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("BeneficiaryAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_boletos_accounts_beneficiary_account_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Boletos.BoletoPayment", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("PayerAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_boleto_payments_accounts_payer_account_id");
                 });
 
             modelBuilder.Entity("Bank.Domain.Cards.Card", b =>

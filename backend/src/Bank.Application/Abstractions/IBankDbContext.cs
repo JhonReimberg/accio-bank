@@ -38,6 +38,8 @@ public interface IBankDbContext
     DbSet<Domain.Cards.CardPurchase> CardPurchases { get; }
     DbSet<Domain.Fraud.FraudPolicy> FraudPolicies { get; }
     DbSet<Domain.Fraud.FraudReview> FraudReviews { get; }
+    DbSet<Domain.Boletos.Boleto> Boletos { get; }
+    DbSet<Domain.Boletos.BoletoPayment> BoletoPayments { get; }
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<Notification> Notifications { get; }
 

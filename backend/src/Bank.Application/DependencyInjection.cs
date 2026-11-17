@@ -45,6 +45,9 @@ public static class DependencyInjection
         services.AddScoped<ExecuteScheduledPixJob>();
         services.AddScoped<IReceiptDetailsProvider, PixReceiptDetails>();
 
+        services.AddScoped<Boletos.BoletoService>();
+        services.AddScoped<Boletos.BoletoPayments>();
+        services.AddScoped<Boletos.ExecuteScheduledBoletosJob>();
         services.AddScoped<Fraud.FraudService>();
         services.AddScoped<Cards.CardService>();
         services.AddScoped<Cards.CardInvoiceJob>();
