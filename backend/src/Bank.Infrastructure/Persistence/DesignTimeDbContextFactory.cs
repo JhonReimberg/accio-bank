@@ -10,6 +10,6 @@ internal class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<BankDbCo
     {
         var builder = new DbContextOptionsBuilder<BankDbContext>();
         DependencyInjection.ConfigureDbContext(builder, "Host=localhost");
-        return new BankDbContext(builder.Options);
+        return new BankDbContext(builder.Options, TimeProvider.System);
     }
 }

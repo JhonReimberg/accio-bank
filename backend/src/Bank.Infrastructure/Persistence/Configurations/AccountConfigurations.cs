@@ -13,6 +13,7 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
         b.HasIndex(u => u.Email).IsUnique();
         b.Property(u => u.Name).HasMaxLength(100);
         b.Property(u => u.Email).HasMaxLength(200);
+        b.Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
     }
 }
 

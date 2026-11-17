@@ -1,7 +1,11 @@
 using Bank.Application.Abstractions;
+using Bank.Infrastructure.Email;
 using Bank.Infrastructure.Idempotency;
+using Bank.Infrastructure.Outbox;
 using Bank.Infrastructure.Persistence;
 using Bank.Infrastructure.Security;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,9 +25,29 @@ public static class DependencyInjection
         services.AddSingleton(GetJwtOptions(configuration));
         services.AddSingleton<ITokenService, TokenService>();
         services.AddSingleton<ISecretHasher, SecretHasher>();
+        services.AddSingleton<IEmailSender, LoggingEmailSender>();
         services.AddSingleton(TimeProvider.System);
+
+        var outbox = configuration.GetSection("Outbox").Get<OutboxOptions>() ?? new OutboxOptions();
+        services.AddSingleton(outbox);
+        if (outbox.Enabled) services.AddHostedService<OutboxProcessor>();
+
+        if (JobsEnabled(configuration))
+        {
+            services.AddHangfire(c => c
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(connectionString)));
+            services.AddHangfireServer();
+        }
+
+        services.AddHealthChecks().AddDbContextCheck<BankDbContext>("database", tags: ["ready"]);
         return services;
     }
+
+    /// <summary>Hangfire (scheduled and recurring jobs). Off in integration tests, which call jobs directly.</summary>
+    public static bool JobsEnabled(IConfiguration configuration) => configuration.GetValue("Jobs:Enabled", true);
 
     public static JwtOptions GetJwtOptions(IConfiguration configuration)
     {

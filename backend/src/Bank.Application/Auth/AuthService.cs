@@ -1,4 +1,5 @@
 using Bank.Application.Abstractions;
+using Bank.Application.Auditing;
 using Bank.Application.Common;
 using Bank.Domain.Accounts;
 using Bank.Domain.Users;
@@ -36,6 +37,7 @@ public class AuthService(
     IBankDbContext db,
     ISecretHasher hasher,
     ITokenService tokens,
+    IAuditLog audit,
     TimeProvider clock,
     IValidator<RegisterRequest> registerValidator,
     IValidator<LoginRequest> loginValidator)
@@ -52,6 +54,7 @@ public class AuthService(
         user.SetPasswordHash(hasher.Hash(request.Password));
         db.Users.Add(user);
         db.Accounts.Add(Account.OpenCustomer(user.Id, now));
+        audit.Record("auth.registered", nameof(User), user.Id, after: new { user.Email, user.Role }, actorUserId: user.Id);
         await db.SaveChangesAsync(ct);
         return new AuthResponse(tokens.CreateAccessToken(user), user.Name);
     }
@@ -62,7 +65,13 @@ public class AuthService(
         var email = User.NormalizeEmail(request.Email);
         var user = await db.Users.SingleOrDefaultAsync(u => u.Email == email, ct);
         if (user is null || !hasher.Verify(user.PasswordHash, request.Password))
+        {
+            audit.Record("auth.login_failed", nameof(User), user?.Id, after: new { Email = email }, actorUserId: user?.Id);
+            await db.SaveChangesAsync(ct);
             throw new UnauthorizedException("E-mail ou senha inválidos.");
+        }
+        audit.Record("auth.login_succeeded", nameof(User), user.Id, actorUserId: user.Id);
+        await db.SaveChangesAsync(ct);
         return new AuthResponse(tokens.CreateAccessToken(user), user.Name);
     }
 }

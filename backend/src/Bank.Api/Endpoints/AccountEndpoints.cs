@@ -13,9 +13,11 @@ public static class AccountEndpoints
             TypedResults.Ok(await accounts.GetTransactionsAsync(ct)));
         g.MapPost("/deposits", async (DepositRequest req, AccountService accounts, CancellationToken ct) =>
                 TypedResults.Ok(await accounts.DepositAsync(req, ct)))
-            .RequireIdempotency();
+            .RequireIdempotency()
+            .RequireRateLimiting(RateLimits.Sensitive);
         g.MapPost("/transfers", async (TransferRequest req, AccountService accounts, CancellationToken ct) =>
                 TypedResults.Ok(await accounts.TransferAsync(req, ct)))
-            .RequireIdempotency();
+            .RequireIdempotency()
+            .RequireRateLimiting(RateLimits.Sensitive);
     }
 }

@@ -12,6 +12,11 @@ public record JwtOptions(string Issuer, string Key, int AccessTokenMinutes = 15)
     public SymmetricSecurityKey SigningKey => new(Encoding.UTF8.GetBytes(Key));
 }
 
+public static class ClaimNames
+{
+    public const string Role = "role";
+}
+
 internal class TokenService(JwtOptions options, TimeProvider clock) : ITokenService
 {
     private readonly JsonWebTokenHandler _handler = new();
@@ -29,6 +34,7 @@ internal class TokenService(JwtOptions options, TimeProvider clock) : ITokenServ
             Subject = new ClaimsIdentity([
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Name, user.Name),
+                new Claim(ClaimNames.Role, user.Role.ToString()),
             ]),
             SigningCredentials = new SigningCredentials(options.SigningKey, SecurityAlgorithms.HmacSha256),
         });

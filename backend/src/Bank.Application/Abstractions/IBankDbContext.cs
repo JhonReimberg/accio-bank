@@ -1,5 +1,7 @@
 using Bank.Domain.Accounts;
+using Bank.Domain.Auditing;
 using Bank.Domain.Ledger;
+using Bank.Domain.Notifications;
 using Bank.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -13,6 +15,8 @@ public interface IBankDbContext
     DbSet<BalanceHold> BalanceHolds { get; }
     DbSet<LedgerTransaction> LedgerTransactions { get; }
     DbSet<LedgerEntry> LedgerEntries { get; }
+    DbSet<AuditLog> AuditLogs { get; }
+    DbSet<Notification> Notifications { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 

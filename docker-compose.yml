@@ -23,6 +23,8 @@ services:
       ConnectionStrings__Bank: Host=db;Port=5432;Database=bank;Username=bank;Password=${POSTGRES_PASSWORD}
       Jwt__Issuer: bank-api
       Jwt__Key: ${JWT_KEY:?set JWT_KEY in .env}
+      # nginx (web) sits in front: trust X-Forwarded-For for client IPs (audit log, rate limiting).
+      ForwardedHeaders__Enabled: "true"
     ports:
       - "5080:8080"
     depends_on:

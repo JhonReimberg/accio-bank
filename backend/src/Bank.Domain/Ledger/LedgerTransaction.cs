@@ -56,6 +56,8 @@ public class LedgerTransaction : Entity
             if (p.Direction == EntryDirection.Debit) p.Account.ApplyDebit(p.Amount);
             else p.Account.ApplyCredit(p.Amount);
             tx._entries.Add(LedgerEntry.Create(tx.Id, p.Account.Id, p.Direction, p.Amount, p.Account.Balance, p.Description, now));
+            if (p.Direction == EntryDirection.Credit && p.Account.Type == AccountType.Customer)
+                tx.Raise(new FundsCredited(p.Account.Id, tx.Id, kind, p.Amount, p.Description));
         }
         return tx;
     }

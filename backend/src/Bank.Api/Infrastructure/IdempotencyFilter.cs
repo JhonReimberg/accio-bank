@@ -83,10 +83,13 @@ internal sealed class IdempotencyFilter(IdempotencyStore store, ICurrentUser cur
     }
 }
 
+/// <summary>Marks an endpoint as requiring Idempotency-Key (used to document the header in OpenAPI).</summary>
+internal sealed class IdempotentEndpoint;
+
 internal static class IdempotencyExtensions
 {
     public static RouteHandlerBuilder RequireIdempotency(this RouteHandlerBuilder builder) =>
-        builder.AddEndpointFilter<IdempotencyFilter>();
+        builder.AddEndpointFilter<IdempotencyFilter>().WithMetadata(new IdempotentEndpoint());
 
     public static IApplicationBuilder UseIdempotencyBuffering(this IApplicationBuilder app) =>
         app.Use(async (http, next) =>

@@ -1,4 +1,5 @@
 using Bank.Application.Abstractions;
+using Bank.Application.Auditing;
 using Bank.Application.Common;
 using Bank.Application.Ledger;
 using Bank.Domain.Accounts;
@@ -40,6 +41,7 @@ public class AccountService(
     IBankDbContext db,
     ICurrentUser currentUser,
     LedgerPosting ledger,
+    IAuditLog audit,
     IValidator<DepositRequest> depositValidator,
     IValidator<TransferRequest> transferValidator)
 {
@@ -79,7 +81,8 @@ public class AccountService(
         var tx = await ledger.ExecuteAsync([SystemAccounts.Cash, accountId], (accounts, now) =>
             LedgerTransaction.Transfer(
                 TransactionKind.Deposit, accounts[SystemAccounts.Cash], accounts[accountId], request.Amount,
-                "Depósito de cliente", "Depósito", now), ct);
+                "Depósito de cliente", "Depósito", now), ct,
+            beforeSave: t => audit.Record("account.deposit", nameof(LedgerTransaction), t.Id, after: new { accountId, request.Amount }));
         return new OperationResponse(tx.Id);
     }
 
@@ -100,7 +103,9 @@ public class AccountService(
         var tx = await ledger.ExecuteAsync([source.Id, target.Id], (accounts, now) =>
             LedgerTransaction.Transfer(
                 TransactionKind.InternalTransfer, accounts[source.Id], accounts[target.Id], request.Amount,
-                $"Transferência para {target.Name}", $"Transferência de {source.Name}", now), ct);
+                $"Transferência para {target.Name}", $"Transferência de {source.Name}", now), ct,
+            beforeSave: t => audit.Record("account.transfer", nameof(LedgerTransaction), t.Id,
+                after: new { From = source.Id, To = target.Id, request.Amount }));
         return new OperationResponse(tx.Id);
     }
 
