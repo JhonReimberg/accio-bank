@@ -9,13 +9,17 @@
 
 > **Projeto fictício, feito para portfólio.** "Vela" não é uma instituição real e não tem relação com nenhum banco. Os CPFs, chaves e documentos usados são gerados para teste.
 
-Um banco digital com regras de negócio reais: **ledger de partidas dobradas**, **controle de concorrência**, **idempotência**, **PIX** (chaves, QR Code, copia e cola, devolução, agendamento e limites noturnos), **onboarding com KYC**, **2FA**, **senha transacional** e **crédito** (score explicável, motor de elegibilidade, empréstimo pela Tabela Price, cheque especial e back-office). As Fases 1 e 2 estão prontas; cartões e investimentos vêm na Fase 3 ([roadmap](#roadmap)).
+Um banco digital com regras de negócio reais: **ledger de partidas dobradas**, **controle de concorrência**, **idempotência**, **PIX** (chaves, QR Code, copia e cola, devolução, agendamento e limites noturnos), **onboarding com KYC**, **2FA**, **senha transacional** e **crédito** (score explicável, motor de elegibilidade, empréstimo pela Tabela Price, cheque especial e back-office), **cartões** (fatura, parcelamento, rotativo), **investimentos** (CDB, caixinhas, IR regressivo), **antifraude**, **boletos** e **notificações em tempo real** (SignalR). As três fases do [roadmap](#roadmap) estão prontas.
 
 | Início (desktop) | PIX no celular | Receber com QR Code |
 | --- | --- | --- |
 | ![Início](docs/screenshots/home.png) | ![Pagar com PIX](docs/screenshots/pix-pagar-mobile.png) | ![QR Code PIX](docs/screenshots/pix-receber.png) |
 | **Crédito: o que falta** | **Simulação (Price, IOF, CET)** | **Back-office** |
 | ![Requisitos do empréstimo](docs/screenshots/credito-bloqueado.png) | ![Simulação](docs/screenshots/credito-simulacao.png) | ![Painel do back-office](docs/screenshots/backoffice-painel.png) |
+| **Cartões e simulador de compra** | **Fatura** | **Investimentos (prévia de IR/IOF)** |
+| ![Cartões](docs/screenshots/cartoes.png) | ![Fatura](docs/screenshots/fatura.png) | ![Investimentos](docs/screenshots/investimentos.png) |
+| **Fila antifraude** | **Notificação em tempo real** | |
+| ![Antifraude](docs/screenshots/backoffice-antifraude.png) | ![Notificação via SignalR](docs/screenshots/notificacao-tempo-real.png) | |
 
 ## Rodar com um comando
 
@@ -39,12 +43,12 @@ Senha de todos: `Vela@demo123` · senha transacional: `2580`
 
 | Usuário | Situação |
 | --- | --- |
-| `carla@vela.dev` | Cliente Plus com 4 meses de conta e movimentação recente: **elegível ao crédito** (oferta pré-aprovada) |
-| `diego@vela.dev` | Conta aberta há 10 dias: **bloqueado por tempo de conta** (vê "faltam X dias" e o progresso) |
+| `carla@vela.dev` | Cliente Plus com 4 meses de conta: **elegível ao crédito**, com caixinha de viagem (recebe o arredondamento das compras), CDB, cartão de crédito com compra parcelada e um boleto emitido |
+| `diego@vela.dev` | Conta aberta há 10 dias: **bloqueado por tempo de conta**; tem um PIX de R$ 1.200 **retido pelo antifraude** esperando o analista |
 | `eduardo@vela.dev` | Pegou um empréstimo, pagou a 1ª parcela e está com a 2ª **em atraso** (multa + mora) |
 | `fernanda@vela.dev` | Cadastro **aguardando análise** na fila de KYC |
-| `analista@vela.dev` | Perfil **Analyst** (fila de KYC, bloqueios, auditoria) |
-| `admin@vela.dev` | Perfil **Admin** (tudo do analista + conciliação do ledger) |
+| `analista@vela.dev` | Perfil **Analyst** (filas de KYC e antifraude, bloqueios, auditoria) |
+| `admin@vela.dev` | Perfil **Admin** (tudo do analista + políticas de crédito e antifraude, conciliação do ledger) |
 
 Também dá para abrir uma conta nova pelo app. No modo demo, a análise de KYC é aprovada automaticamente (`Kyc__AutoApprove`).
 
@@ -82,6 +86,27 @@ Também dá para abrir uma conta nova pelo app. No modo demo, a análise de KYC 
   - log de auditoria pesquisável;
   - política de crédito (taxas por faixa, regras, CDI), com edição restrita ao Admin.
 
+## Funcionalidades (Fase 3: cartões, investimentos, antifraude)
+
+- **Cartões:**
+  - débito e crédito com número válido pelo algoritmo de Luhn (BIN fictício);
+  - físico, virtual e **virtual temporário** (cancelado sozinho após a primeira compra);
+  - bloqueio e desbloqueio, compras online liga/desliga, número completo só com a senha transacional (auditado);
+  - limite de crédito pela faixa de score, dia de vencimento escolhido, fatura que fecha 7 dias antes;
+  - **compra parcelada** distribuída nas faturas futuras (consome o limite todo na hora);
+  - pagamento total, parcial ou mínimo (15%); o restante vai para a próxima fatura com **juros do rotativo** (12% a.m.) e multa de 2% abaixo do mínimo;
+  - **simulador de compras** que faz o papel da maquininha/bandeira (recusas ficam registradas com o motivo).
+- **Investimentos:**
+  - CDB de liquidez diária e **caixinhas com meta** e barra de progresso;
+  - rendimento diário em % do CDI (configurado pelo Admin) aplicado por job nos dias úteis;
+  - resgate com prévia de **IR regressivo** (22,5% → 15%) e **IOF regressivo** nos primeiros 30 dias, calculados por lote de aplicação (FIFO);
+  - **arredondamento** das compras no cartão para a caixinha;
+  - **empréstimo com garantia** do CDB: o valor fica bloqueado (e rendendo) e a taxa é menor.
+- **Antifraude:** regras configuráveis pelo Admin (valor muito acima da média do cliente, dispositivo novo com valor alto, muitas transações em poucos minutos). PIX suspeito não sai: o valor fica **bloqueado no saldo**, o cliente vê "em análise" e o analista aprova (o PIX é enviado na hora) ou recusa (o dinheiro volta a ficar disponível).
+- **Tempo real:** notificações por **SignalR** (PIX recebido, parcela debitada, transação retida, boleto não pago...), com aviso na tela e atualização automática do saldo.
+- **Boletos:** emissão para cobrar (linha digitável e código de barras no padrão FEBRABAN, com banco fictício), pagamento validando os dígitos verificadores (módulo 10 e 11) e o fator de vencimento, e **agendamento** até o vencimento.
+- **Recarga de celular** simulada (operadoras fictícias), debitada pelo ledger.
+
 ## Arquitetura
 
 ```mermaid
@@ -94,7 +119,8 @@ flowchart LR
         Infra["Bank.Infrastructure<br/>EF Core, JWT, TOTP, PDF,<br/>ViaCEP, outbox, Hangfire"] --> App
     end
     Infra --> Db[(PostgreSQL)]
-    Infra -. "jobs: PIX agendado,<br/>conciliação" .-> Db
+    Infra -. "jobs: PIX/boletos agendados,<br/>score, cobrança, rendimento,<br/>fatura, conciliação" .-> Db
+    Api -. "SignalR<br/>(notificações)" .-> Browser
 ```
 
 - **Domain:** entidades ricas (`Account`, `LedgerTransaction`, `Customer`, `PixTransfer`, `PixLimitSettings`...) que protegem as próprias regras e lançam `DomainException` com código e mensagem em pt-BR.
@@ -120,6 +146,17 @@ erDiagram
     USERS ||--o{ REFRESH_TOKENS : "sessões"
     USERS ||--o{ DEVICES : "dispositivos"
     USERS ||--o{ NOTIFICATIONS : "recebe"
+    ACCOUNTS ||--o{ LOANS : "empréstimos"
+    LOANS ||--|{ LOAN_INSTALLMENTS : "parcelas"
+    ACCOUNTS ||--o{ INVESTMENTS : "CDB / caixinhas"
+    INVESTMENTS ||--|{ INVESTMENT_LOTS : "aplicações (IR por lote)"
+    ACCOUNTS ||--o{ CARDS : "cartões"
+    ACCOUNTS ||--o| CREDIT_LINES : "limite do cartão"
+    CREDIT_LINES ||--o{ INVOICES : "faturas"
+    INVOICES ||--o{ INVOICE_ITEMS : "compras e encargos"
+    ACCOUNTS ||--o{ FRAUD_REVIEWS : "PIX retidos"
+    ACCOUNTS ||--o{ BOLETOS : "emitidos"
+    ACCOUNTS ||--o{ BOLETO_PAYMENTS : "pagos/agendados"
 ```
 
 Tabelas de apoio: `audit_logs`, `outbox_messages`, `idempotency_records`, `login_attempts`, `pix_contacts` e as tabelas do Hangfire (schema `hangfire`).
@@ -157,6 +194,18 @@ Cada requisito é uma implementação de `IEligibilityRule`: conta ativa, tempo 
 - **Antecipação:** desconto pelo valor presente na taxa do contrato, limitado aos juros daquela parcela, para que o principal seja sempre quitado e o ledger continue fechando.
 - **Contabilidade:** a contratação é um lançamento em várias pontas (carteira de crédito → cliente + IOF a recolher); a parcela também (cliente → carteira + receitas de crédito).
 
+### Cartões e fatura
+Uma compra no crédito não move o saldo do cliente: o banco paga o estabelecimento e passa a ter um valor **a receber** (conta interna de liquidação de cartões). O pagamento da fatura quita esse recebível, e juros/multas do rotativo viram receita. A compra parcelada consome o limite inteiro na hora e gera um item em cada fatura futura (a primeira parcela absorve os centavos do arredondamento). A conta do cliente é travada durante a compra, então duas compras em paralelo não estouram o limite.
+
+### Investimentos
+Cada aplicação vira um **lote** com data própria, porque o IR e o IOF dependem do prazo de cada aporte. O resgate consome os lotes do mais antigo para o mais novo (FIFO) e calcula IR/IOF só sobre o rendimento de cada um. O rendimento diário usa a taxa equivalente do CDI em 252 dias úteis.
+
+### Antifraude e boletos
+As regras são avaliadas antes de o PIX sair; se alguma dispara, o valor vira um **bloqueio de saldo** e uma análise. Aprovar libera o bloqueio e envia o PIX **na mesma transação**; os limites de PIX são checados quando o cliente pede, não quando o analista aprova. No boleto, um código digitado errado é recusado pelos dígitos verificadores antes de qualquer consulta; o fator de vencimento trata a "virada" de 2025 (voltou a 1000).
+
+### Tempo real
+Toda notificação gravada gera um evento no outbox; o handler empurra a mensagem pelo **SignalR** para as sessões abertas do usuário (identificado pelo `sub` do JWT). O WebSocket recebe o token pela query string, só no caminho do hub. A central de notificações continua sendo a fonte da verdade: se o socket cair, nada se perde.
+
 ### Outras escolhas
 - **Dinheiro em `decimal`** com arredondamento bancário explícito (`MidpointRounding.ToEven`), validado com no máximo 2 casas.
 - **Datas em UTC no banco**, regras e exibição no horário de Brasília. O relógio de negócio é um `TimeProvider` injetado, que os testes controlam para simular o período noturno, a carência de 24 h e os agendamentos mensais.
@@ -167,11 +216,11 @@ Cada requisito é uma implementação de `IEligibilityRule`: conta ativa, tempo 
 ## Testes e CI
 
 ```bash
-cd backend && dotnet test   # 113 unitários + 58 de integração
+cd backend && dotnet test   # 153 unitários + 68 de integração
 ```
 
-- **Unitários:** regras de domínio, como cálculo de CPF, BR Code e CRC16, períodos e carência de limites, agendamento mensal (31/01 → 28/02 → 31/03), devoluções e bloqueio de PIN.
-- **Integração:** a API real contra um **PostgreSQL de verdade via Testcontainers**, cobrindo os fluxos de dinheiro, concorrência, idempotência, segurança, KYC e PIX.
+- **Unitários:** regras de domínio, como cálculo de CPF, BR Code e CRC16, períodos e carência de limites, agendamento mensal (31/01 → 28/02 → 31/03), devoluções, bloqueio de PIN, Tabela Price/IOF/CET, IR e IOF regressivos, Luhn, fatura e rotativo, linha digitável de boleto e regras antifraude.
+- **Integração:** a API real contra um **PostgreSQL de verdade via Testcontainers**, cobrindo os fluxos de dinheiro, concorrência, idempotência, segurança, KYC, PIX, crédito, cartões, investimentos, antifraude, boletos e o push via SignalR. Os testes com tempo (rotativo, agendamentos, rendimento) controlam o relógio de negócio, e vários terminam conferindo a conciliação do ledger.
 - **GitHub Actions** (`.github/workflows/ci.yml`): build, testes, lint e build do frontend em todo push e PR.
 
 ## Desenvolvimento local
@@ -194,18 +243,22 @@ backend/
   tests/                    unitários e integração (Testcontainers)
 frontend/src/
   lib/                      cliente HTTP, sessão, formatação, tipos
-  pages/                    telas (onboarding, início, extrato, PIX, segurança)
+  pages/                    telas (onboarding, início, extrato, PIX, crédito, cartões,
+                            investimentos, pagamentos, segurança, back-office)
 ```
 
 ## Roadmap
 
 - [x] **Fase 1:** base sólida (conta, segurança, ledger, PIX)
 - [x] **Fase 2:** crédito (motor de elegibilidade, score interno, empréstimo pela Tabela Price, cheque especial, back-office)
-- [ ] **Fase 3:** cartões, investimentos (CDB, caixinhas, IR regressivo), crédito com garantia de investimento, antifraude e notificações em tempo real (SignalR)
+- [x] **Fase 3:** cartões, investimentos (CDB, caixinhas, IR regressivo), crédito com garantia de investimento, antifraude, notificações em tempo real (SignalR), boletos e recarga
 
 ## Simplificações conscientes
 
 - Todo PIX é entre contas do próprio Vela; não há integração com o SPI/DICT reais.
 - Chaves de e-mail e celular não são confirmadas por código.
 - O e-mail é simulado: as mensagens vão para o log estruturado.
+- Boletos de outros bancos e recargas são liquidados contra uma conta interna (não há câmara de compensação nem operadora real).
+- O número completo do cartão fica no banco de dados; um emissor real usa um cofre/tokenização no escopo PCI.
+- O seed não gera o rendimento retroativo dos investimentos: ele começa a aparecer a partir do primeiro job diário.
 - A chave de assinatura dos JWTs e as senhas do `.env` servem só para desenvolvimento.
