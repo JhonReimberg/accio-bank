@@ -29,8 +29,9 @@ export default function StatementPage() {
 
   return (
     <div className="stack-lg">
-      <PageHeader title="Extrato" />
-      <Card>
+      <PageHeader title="Extrato" back="/conta" />
+      <details className="card filters-box" open={[...params.keys()].some((k) => k !== 'page')}>
+        <summary>Filtrar por data, tipo ou nome</summary>
         <form className="filters" onSubmit={applyFilters}>
           <Field label="De" name="from" type="date" defaultValue={params.get('from') ?? ''} />
           <Field label="Até" name="to" type="date" defaultValue={params.get('to') ?? ''} />
@@ -50,7 +51,7 @@ export default function StatementPage() {
           <Field label="Buscar" name="search" defaultValue={params.get('search') ?? ''} placeholder="Nome ou descrição" />
           <Button variant="ghost">Filtrar</Button>
         </form>
-      </Card>
+      </details>
 
       <Card>
         {statement.isPending ? (
@@ -89,7 +90,13 @@ export default function StatementPage() {
         )}
       </Card>
 
-      {selected && <TransactionDetail item={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <div className="sheet-backdrop" onClick={() => setSelected(null)}>
+          <div className="sheet" role="dialog" aria-modal="true" aria-label="Detalhe da transação" onClick={(e) => e.stopPropagation()}>
+            <TransactionDetail item={selected} onClose={() => setSelected(null)} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

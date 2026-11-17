@@ -8,17 +8,20 @@ import DashboardPage from './pages/backoffice/DashboardPage'
 import FraudPage from './pages/backoffice/FraudPage'
 import KycQueuePage from './pages/backoffice/KycQueuePage'
 import PolicyPage from './pages/backoffice/PolicyPage'
-import CardsPage from './pages/cards/CardsPage'
+import CardsPage, { CardDetailPage, IssueCardPage, OpenCreditLinePage, SimulatePurchasePage } from './pages/cards/CardsPage'
 import InvoicePage from './pages/cards/InvoicePage'
-import CreditPage from './pages/credit/CreditPage'
-import InvestmentsPage from './pages/investments/InvestmentsPage'
-import PaymentsPage from './pages/payments/PaymentsPage'
+import CreditPage, { ScorePage, SimulatePage } from './pages/credit/CreditPage'
+import InvestmentsPage, { InvestmentDetailPage, InvestmentOperationPage, NewInvestmentPage } from './pages/investments/InvestmentsPage'
+import PaymentsPage, { IssueBoletoPage, PayBoletoPage, RechargePage } from './pages/payments/PaymentsPage'
 import LoansPage from './pages/credit/LoansPage'
 import OverdraftPage from './pages/credit/OverdraftPage'
 import { useAuth } from './lib/useAuth'
 import { useOnboarding } from './lib/queries'
 import { LoginPage, RegisterPage } from './pages/AuthPages'
+import AccountPage from './pages/AccountPage'
 import DepositPage from './pages/DepositPage'
+import { BenefitsPage, HelpPage, MenuPage, ProfilePage, SettingsPage } from './pages/MenuPages'
+import DesignSystemPage from './pages/DesignSystemPage'
 import HomePage from './pages/HomePage'
 import NotificationsPage from './pages/NotificationsPage'
 import OnboardingPage from './pages/OnboardingPage'
@@ -28,7 +31,7 @@ import PixLimitsPage from './pages/pix/PixLimitsPage'
 import PixReceivePage from './pages/pix/PixReceivePage'
 import PixSchedulesPage from './pages/pix/PixSchedulesPage'
 import PixSendPage from './pages/pix/PixSendPage'
-import SecurityPage from './pages/SecurityPage'
+import SecurityPage, { AccessHistoryPage, DevicesPage, PinPage, TwoFactorPage } from './pages/SecurityPage'
 import StatementPage from './pages/StatementPage'
 
 function PublicOnly() {
@@ -66,6 +69,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/design-system" element={<DesignSystemPage />} />
         <Route element={<PublicOnly />}>
           <Route path="/entrar" element={<LoginPage />} />
           <Route path="/abrir-conta" element={<RegisterPage />} />
@@ -96,14 +100,38 @@ export default function App() {
               <Route path="pix/agendados" element={<PixSchedulesPage />} />
               <Route path="pix/limites" element={<PixLimitsPage />} />
               <Route path="seguranca" element={<SecurityPage />} />
+              <Route path="seguranca/duas-etapas" element={<TwoFactorPage />} />
+              <Route path="seguranca/senha" element={<PinPage />} />
+              <Route path="seguranca/dispositivos" element={<DevicesPage />} />
+              <Route path="seguranca/acessos" element={<AccessHistoryPage />} />
+              <Route path="conta" element={<AccountPage />} />
+              <Route path="menu" element={<MenuPage />} />
+              <Route path="perfil" element={<ProfilePage />} />
+              <Route path="configurar" element={<SettingsPage />} />
+              <Route path="ajuda" element={<HelpPage />} />
+              <Route path="beneficios" element={<BenefitsPage />} />
+              <Route path="recarga" element={<RechargePage />} />
               <Route path="notificacoes" element={<NotificationsPage />} />
               <Route path="credito" element={<CreditPage />} />
               <Route path="credito/emprestimos" element={<LoansPage />} />
               <Route path="credito/cheque-especial" element={<OverdraftPage />} />
+              <Route path="credito/simular" element={<SimulatePage />} />
+              <Route path="credito/score" element={<ScorePage />} />
               <Route path="cartoes" element={<CardsPage />} />
               <Route path="cartoes/fatura" element={<InvoicePage />} />
+              <Route path="cartoes/novo" element={<IssueCardPage />} />
+              <Route path="cartoes/ativar-credito" element={<OpenCreditLinePage />} />
+              <Route path="cartoes/:id" element={<CardDetailPage />} />
+              <Route path="cartoes/:id/simular" element={<SimulatePurchasePage />} />
               <Route path="investimentos" element={<InvestmentsPage />} />
+              <Route path="investimentos/novo" element={<NewInvestmentPage />} />
+              <Route path="investimentos/:id" element={<InvestmentDetailPage />} />
+              <Route path="investimentos/:id/aplicar" element={<InvestmentOperationPage kind="applications" />} />
+              <Route path="investimentos/:id/resgatar" element={<InvestmentOperationPage kind="redemptions" />} />
+              <Route path="investimentos/:id/garantia" element={<InvestmentOperationPage kind="loan" />} />
               <Route path="pagamentos" element={<PaymentsPage />} />
+              <Route path="pagamentos/boleto" element={<PayBoletoPage />} />
+              <Route path="pagamentos/cobrar" element={<IssueBoletoPage />} />
             </Route>
           </Route>
           </Route>

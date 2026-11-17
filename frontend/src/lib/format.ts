@@ -70,3 +70,10 @@ const percentFormat = new Intl.NumberFormat('pt-BR', { style: 'percent', maximum
 
 /** 0.045 → "4,5%". */
 export const percent = (ratio: number) => percentFormat.format(ratio)
+
+/** "Carla Mendes de Souza" -> "CS", for avatars. */
+export function initials(name?: string) {
+  if (!name) return '·'
+  const parts = name.trim().split(/\s+/)
+  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase()
+}

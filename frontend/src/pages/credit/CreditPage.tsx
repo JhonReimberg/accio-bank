@@ -1,20 +1,52 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router'
-import { Alert, Button, Card, ErrorBox, Field, Loading, PageHeader, PinDialog, Select } from '../../components/ui'
+import { Alert, Button, Card, ErrorBox, Field, ListRow, Loading, PageHeader, PinDialog, RowGroup, Select } from '../../components/ui'
 import { api } from '../../lib/api'
 import { brl, dateOnly, parseAmount, percent } from '../../lib/format'
 import { keys, useMoneyMoved } from '../../lib/queries'
 import type { Eligibility, LoanOffer, LoanQuote, RuleResult, Score } from '../../lib/types'
 
+const eligibilityKey = [...keys.account, 'eligibility']
+
+/** Credit hub: offer at a glance; simulation, loans, overdraft and score each have their own screen. */
 export default function CreditPage() {
-  const eligibility = useQuery({ queryKey: [...keys.account, 'eligibility'], queryFn: () => api<Eligibility>('/credit/eligibility') })
+  const eligibility = useQuery({ queryKey: eligibilityKey, queryFn: () => api<Eligibility>('/credit/eligibility') })
+  const offer = eligibility.data?.eligible ? eligibility.data.offer : null
 
   return (
     <div className="stack-lg">
-      <PageHeader title="Crédito">
-        <Link to="/credito/emprestimos">Meus empréstimos</Link>
-      </PageHeader>
+      <PageHeader title="Empréstimos" back="/" />
+      {eligibility.isPending ? (
+        <Loading />
+      ) : eligibility.isError ? (
+        <ErrorBox error={eligibility.error} retry={eligibility.refetch} />
+      ) : offer ? (
+        <div className="center-value">
+          <p className="muted">Valor disponível de até</p>
+          <p className="hero-value">{brl(offer.maxAmount)}</p>
+          <p className="muted small">Taxa de {percent(offer.monthlyRate)} ao mês</p>
+          <Link to="/credito/simular" className="btn btn-primary">
+            Simular empréstimo
+          </Link>
+        </div>
+      ) : (
+        <Blocked rules={eligibility.data.rules} />
+      )}
+      <RowGroup>
+        <ListRow to="/credito/emprestimos" icon="≡" title="Meus empréstimos" text="Parcelas, pagamentos e quitação" />
+        <ListRow to="/credito/cheque-especial" icon="⊕" title="Cheque especial" text="Limite extra, juros só nos dias de uso" />
+        <ListRow to="/credito/score" icon="★" title="Score de crédito" text="O que aumenta e o que diminui" />
+      </RowGroup>
+    </div>
+  )
+}
+
+export function SimulatePage() {
+  const eligibility = useQuery({ queryKey: eligibilityKey, queryFn: () => api<Eligibility>('/credit/eligibility') })
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Simular empréstimo" back="/credito" />
       {eligibility.isPending ? (
         <Loading />
       ) : eligibility.isError ? (
@@ -24,16 +56,15 @@ export default function CreditPage() {
       ) : (
         <Blocked rules={eligibility.data.rules} />
       )}
+    </div>
+  )
+}
+
+export function ScorePage() {
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Score de crédito" back="/credito" />
       <ScoreCard />
-      <Card className="row-between">
-        <div>
-          <h2>Cheque especial</h2>
-          <p className="muted small">Limite extra na conta, com juros só nos dias em que for usado.</p>
-        </div>
-        <Link to="/credito/cheque-especial" className="btn btn-ghost">
-          Ver limite
-        </Link>
-      </Card>
     </div>
   )
 }
@@ -210,7 +241,7 @@ function ScoreCard() {
   return (
     <Card className="stack">
       <div className="row-between">
-        <h2>Seu score Vela</h2>
+        <h2>Seu score Accio</h2>
         <p className="big">{s.score}</p>
       </div>
       <meter min={0} max={1000} low={400} high={800} optimum={1000} value={s.score} aria-label={`Score ${s.score} de 1000`} />

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router'
-import { Alert, Button, Card, Empty, ErrorBox, Field, Loading, PageHeader, PinDialog, Select } from '../../components/ui'
+import { Link, useNavigate, useParams } from 'react-router'
+import { Alert, BankCardVisual, Button, Card, ListRow, RowGroup, Empty, ErrorBox, Field, Loading, PageHeader, PinDialog, Select } from '../../components/ui'
 import { api } from '../../lib/api'
 import { brl, parseAmount } from '../../lib/format'
 import { keys, useMoneyMoved } from '../../lib/queries'
@@ -13,6 +13,7 @@ const creditLineKey = keys.creditLine
 const formLabel: Record<BankCard['form'], string> = { Physical: 'Físico', Virtual: 'Virtual', VirtualTemporary: 'Virtual temporário' }
 const statusLabel: Record<BankCard['status'], string> = { Active: 'Ativo', Blocked: 'Bloqueado', Cancelled: 'Cancelado' }
 
+/** Cards hub: credit summary and the card list; each card opens its own screen. */
 export default function CardsPage() {
   const cards = useQuery({ queryKey: cardsKey, queryFn: () => api<BankCard[]>('/cards') })
   const line = useQuery({ queryKey: creditLineKey, queryFn: async () => (await api<CreditLine | undefined>('/cards/credit-line')) ?? null })
@@ -24,10 +25,81 @@ export default function CardsPage() {
 
   return (
     <div className="stack-lg">
-      <PageHeader title="Cartões">{line.data && <Link to="/cartoes/fatura">Fatura</Link>}</PageHeader>
-      {line.data ? <CreditSummary line={line.data} /> : <OpenCreditLine />}
-      {active.length === 0 ? <Empty>Nenhum cartão ainda. Peça um abaixo.</Empty> : active.map((c) => <CardItem key={c.id} card={c} />)}
-      <IssueCard hasCreditLine={!!line.data} />
+      <PageHeader title="Meus cartões" back="/" />
+      {line.data && <CreditSummary line={line.data} />}
+      {active.length === 0 ? (
+        <Empty>Nenhum cartão ainda. Peça o seu abaixo.</Empty>
+      ) : (
+        <div className="card-strip">
+          {active.map((c) => (
+            <Link key={c.id} to={`/cartoes/${c.id}`} className="card-link" aria-label={`Abrir cartão final ${c.masked.slice(-4)}`}>
+              <BankCardVisual
+                credit={c.function === 'Credit'}
+                virtual={c.form !== 'Physical'}
+                blocked={c.status === 'Blocked'}
+                label={`${c.function === 'Credit' ? 'Crédito' : 'Débito'} · ${formLabel[c.form]}`}
+                number={`•••• •••• ${c.masked}`}
+                holder={c.holderName}
+                expiry={c.expiry}
+              />
+            </Link>
+          ))}
+        </div>
+      )}
+      <RowGroup>
+        {line.data ? (
+          <ListRow to="/cartoes/fatura" icon="▤" title="Fatura" text="Ver, pagar e parcelar" />
+        ) : (
+          <ListRow to="/cartoes/ativar-credito" icon="★" title="Ativar cartão de crédito" text="Sem anuidade" />
+        )}
+        <ListRow to="/cartoes/novo" icon="+" title="Pedir novo cartão" text="Físico, virtual ou temporário" />
+      </RowGroup>
+    </div>
+  )
+}
+
+export function CardDetailPage() {
+  const { id } = useParams()
+  const cards = useQuery({ queryKey: cardsKey, queryFn: () => api<BankCard[]>('/cards') })
+  if (cards.isPending) return <Loading />
+  if (cards.isError) return <ErrorBox error={cards.error} retry={cards.refetch} />
+  const card = cards.data.find((c) => c.id === id)
+  return (
+    <div className="stack-lg">
+      <PageHeader title={card ? `Cartão final ${card.masked.slice(-4)}` : 'Cartão'} back="/cartoes" />
+      {card ? <CardItem card={card} /> : <Empty>Cartão não encontrado.</Empty>}
+    </div>
+  )
+}
+
+export function SimulatePurchasePage() {
+  const { id } = useParams()
+  const cards = useQuery({ queryKey: cardsKey, queryFn: () => api<BankCard[]>('/cards') })
+  const card = cards.data?.find((c) => c.id === id)
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Simular compra" back={`/cartoes/${id}`} />
+      <p className="muted">Faz o papel da maquininha da loja: a resposta vem como viria da bandeira.</p>
+      {cards.isPending ? <Loading /> : card ? <Card><PurchaseSimulator card={card} /></Card> : <Empty>Cartão não encontrado.</Empty>}
+    </div>
+  )
+}
+
+export function IssueCardPage() {
+  const line = useQuery({ queryKey: creditLineKey, queryFn: async () => (await api<CreditLine | undefined>('/cards/credit-line')) ?? null })
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Pedir novo cartão" back="/cartoes" />
+      {line.isPending ? <Loading /> : <IssueCard hasCreditLine={!!line.data} />}
+    </div>
+  )
+}
+
+export function OpenCreditLinePage() {
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Cartão de crédito" back="/cartoes" />
+      <OpenCreditLine />
     </div>
   )
 }
@@ -58,11 +130,15 @@ function CreditSummary({ line }: { line: CreditLine }) {
 
 function OpenCreditLine() {
   const client = useQueryClient()
+  const navigate = useNavigate()
   const offer = useQuery({ queryKey: [...creditLineKey, 'offer'], queryFn: () => api<{ maxLimit: number }>('/cards/credit-line/offer') })
   const [dueDay, setDueDay] = useState('10')
   const open = useMutation({
     mutationFn: () => api<CreditLine>('/cards/credit-line', { method: 'POST', body: { dueDay: Number(dueDay) } }),
-    onSuccess: () => client.invalidateQueries({ queryKey: creditLineKey }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: creditLineKey })
+      navigate('/cartoes')
+    },
   })
   if (offer.isPending) return <Loading />
   if (offer.isError) return <ErrorBox error={offer.error} retry={offer.refetch} />
@@ -99,7 +175,6 @@ function CardItem({ card }: { card: BankCard }) {
   const client = useQueryClient()
   const [details, setDetails] = useState<CardDetails | null>(null)
   const [revealing, setRevealing] = useState(false)
-  const [buying, setBuying] = useState(false)
   const update = useMutation({
     mutationFn: (body: { onlinePurchasesEnabled?: boolean; blocked?: boolean }) => api(`/cards/${card.id}`, { method: 'PATCH', body }),
     onSuccess: () => client.invalidateQueries({ queryKey: cardsKey }),
@@ -115,19 +190,15 @@ function CardItem({ card }: { card: BankCard }) {
 
   return (
     <Card className="stack">
-      <div className={`bank-card ${card.function === 'Credit' ? 'bank-card-credit' : ''} ${blocked ? 'bank-card-blocked' : ''}`}>
-        <div className="row-between">
-          <strong>Vela</strong>
-          <span className="small">
-            {card.function === 'Credit' ? 'Crédito' : 'Débito'} · {formLabel[card.form]}
-          </span>
-        </div>
-        <p className="mono bank-card-number">{details ? details.number.replace(/(\d{4})(?=\d)/g, '$1 ') : `•••• •••• ${card.masked}`}</p>
-        <div className="row-between small">
-          <span>{card.holderName}</span>
-          <span>{card.expiry}</span>
-        </div>
-      </div>
+      <BankCardVisual
+        credit={card.function === 'Credit'}
+        virtual={card.form !== 'Physical'}
+        blocked={blocked}
+        label={`${card.function === 'Credit' ? 'Crédito' : 'Débito'} · ${formLabel[card.form]}`}
+        number={details ? details.number.replace(/(\d{4})(?=\d)/g, '$1 ') : `•••• •••• ${card.masked}`}
+        holder={card.holderName}
+        expiry={card.expiry}
+      />
       <div className="row-between small">
         <span className="badge-soft">{statusLabel[card.status]}</span>
         <label className="row">
@@ -150,12 +221,11 @@ function CardItem({ card }: { card: BankCard }) {
             Ver dados
           </Button>
         )}
-        <Button variant="ghost" onClick={() => setBuying(!buying)}>
+        <Link to={`/cartoes/${card.id}/simular`} className="btn btn-ghost">
           Simular compra
-        </Button>
+        </Link>
       </div>
       <Alert kind="error">{update.error?.message}</Alert>
-      {buying && <PurchaseSimulator card={card} />}
       <PinDialog
         open={revealing}
         title="Confirme para ver os dados do cartão"
@@ -232,11 +302,15 @@ function PurchaseSimulator({ card }: { card: BankCard }) {
 
 function IssueCard({ hasCreditLine }: { hasCreditLine: boolean }) {
   const client = useQueryClient()
+  const navigate = useNavigate()
   const [fn, setFn] = useState<BankCard['function']>('Debit')
   const [form, setForm] = useState<BankCard['form']>('Virtual')
   const issue = useMutation({
     mutationFn: () => api<BankCard>('/cards', { method: 'POST', body: { function: fn, form } }),
-    onSuccess: () => client.invalidateQueries({ queryKey: cardsKey }),
+    onSuccess: (card) => {
+      client.invalidateQueries({ queryKey: cardsKey })
+      navigate(`/cartoes/${card.id}`)
+    },
   })
 
   return (

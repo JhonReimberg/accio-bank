@@ -1,6 +1,6 @@
 import { useState, type SyntheticEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Alert, Button, Card, ErrorBox, Field, Loading, PageHeader } from '../components/ui'
+import { Alert, Button, Card, ErrorBox, Field, ListRow, Loading, PageHeader, RowGroup } from '../components/ui'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/useAuth'
 import { dateTime } from '../lib/format'
@@ -14,14 +14,62 @@ const failureLabel: Record<string, string> = {
   unknown_email: 'e-mail desconhecido',
 }
 
+/** Security hub: each control has its own screen. */
 export default function SecurityPage() {
+  const overview = useQuery({ queryKey: [...keys.security, 'overview'], queryFn: () => api<SecurityOverview>('/security') })
+  const on = overview.data?.twoFactorEnabled
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Segurança" back="/menu" />
+      <RowGroup title="Proteção da conta">
+        <ListRow
+          to="/seguranca/duas-etapas"
+          icon="⚿"
+          title="Verificação em duas etapas"
+          text={on === undefined ? '' : on ? 'Ativa' : 'Desativada: recomendamos ativar'}
+        />
+        <ListRow to="/seguranca/senha" icon="▪" title="Senha transacional" text="4 dígitos para PIX, pagamentos e limites" />
+      </RowGroup>
+      <RowGroup title="Acessos">
+        <ListRow to="/seguranca/dispositivos" icon="▯" title="Dispositivos conectados" />
+        <ListRow to="/seguranca/acessos" icon="◷" title="Histórico de acessos" />
+      </RowGroup>
+    </div>
+  )
+}
+
+export function TwoFactorPage() {
   const overview = useQuery({ queryKey: [...keys.security, 'overview'], queryFn: () => api<SecurityOverview>('/security') })
   return (
     <div className="stack-lg">
-      <PageHeader title="Segurança" />
+      <PageHeader title="Duas etapas" back="/seguranca" />
       {overview.isPending ? <Loading /> : overview.isError ? <ErrorBox error={overview.error} /> : <TwoFactor enabled={overview.data.twoFactorEnabled} />}
+    </div>
+  )
+}
+
+export function PinPage() {
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Senha transacional" back="/seguranca" />
       <ChangePin />
+    </div>
+  )
+}
+
+export function DevicesPage() {
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Dispositivos" back="/seguranca" />
       <Devices />
+    </div>
+  )
+}
+
+export function AccessHistoryPage() {
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Histórico de acessos" back="/seguranca" />
       <AccessHistory />
     </div>
   )

@@ -1,20 +1,26 @@
 import { useState, type SyntheticEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Alert, Button, Field } from '../components/ui'
+import { Logo, Mascot } from '../components/Mascot'
 import { useAuth } from '../lib/useAuth'
 
 function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <main className="auth-shell">
-      <div className="brand">
-        <span className="logo logo-lg" aria-hidden>
-          V
-        </span>
-        <h1>Vela</h1>
-        <p className="muted">Banco digital fictício · projeto de portfólio</p>
-      </div>
-      <div className="card stack">{children}</div>
-    </main>
+    <div className="auth-page">
+      <aside className="auth-side">
+        <Mascot mood="hello" size={260} />
+        <h2>Accio, dinheiro!</h2>
+        <p className="muted">O feitiço que chama seu dinheiro: PIX, cartões, caixinhas e crédito em um só lugar.</p>
+      </aside>
+      <main className="auth-shell">
+        <div className="auth-hero">
+          <Mascot mood="hello" size={150} />
+          <Logo size={30} />
+          <p className="muted">Banco digital fictício · projeto de portfólio</p>
+        </div>
+        <div className="card stack">{children}</div>
+      </main>
+    </div>
   )
 }
 

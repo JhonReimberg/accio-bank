@@ -20,6 +20,7 @@ export type Account = {
   availableBalance: number
   blockedBalance: number
   totalBalance: number
+  hasPhoto: boolean
 }
 
 export type TransactionKind = 'Deposit' | 'InternalTransfer' | 'Pix' | 'PixRefund' | 'LoanDisbursement' | 'LoanPayment' | 'OverdraftInterest'

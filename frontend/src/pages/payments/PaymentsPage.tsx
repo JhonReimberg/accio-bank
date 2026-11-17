@@ -1,34 +1,60 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Alert, Button, Card, Empty, ErrorBox, Field, Loading, PageHeader, PinDialog, Select } from '../../components/ui'
+import { Alert, Button, Card, CircleActions, Empty, ErrorBox, Field, ListRow, Loading, PageHeader, PinDialog, RowGroup, Select } from '../../components/ui'
 import { api } from '../../lib/api'
 import { brl, dateOnly, maskPhone, parseAmount, todayInBrasilia } from '../../lib/format'
 import { keys, useMoneyMoved } from '../../lib/queries'
 import type { Boleto, BoletoInfo, BoletoPayment } from '../../lib/types'
 
 const boletosKey = [...keys.account, 'boletos']
-type Tab = 'pay' | 'issue' | 'recharge'
-
+/** Payments hub: each kind of payment has its own screen. */
 export default function PaymentsPage() {
-  const [tab, setTab] = useState<Tab>('pay')
-  const tabs: [Tab, string][] = [
-    ['pay', 'Pagar boleto'],
-    ['issue', 'Cobrar com boleto'],
-    ['recharge', 'Recarga'],
-  ]
   return (
     <div className="stack-lg">
-      <PageHeader title="Pagamentos" />
-      <div className="tabs" role="tablist">
-        {tabs.map(([id, label]) => (
-          <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? 'tab-active' : ''} onClick={() => setTab(id)}>
-            {label}
-          </button>
-        ))}
-      </div>
-      {tab === 'pay' && <PayBoleto />}
-      {tab === 'issue' && <IssueBoleto />}
-      {tab === 'recharge' && <Recharge />}
+      <PageHeader title="Pagamentos" back="/" />
+      <CircleActions
+        label="Pagamentos"
+        items={[
+          { to: '/pagamentos/boleto', icon: '▥', label: 'Pagar boleto' },
+          { to: '/pagamentos/cobrar', icon: '↙', label: 'Cobrar com boleto' },
+          { to: '/recarga', icon: '▯', label: 'Recarga de celular' },
+          { to: '/pix/pagar', icon: '◈', label: 'Pagar com PIX' },
+        ]}
+      />
+      <RowGroup title="Boletos">
+        <ListRow to="/pagamentos/boleto" icon="▥" title="Pagar boleto" text="Pelo código de barras, hoje ou agendado" />
+        <ListRow to="/pagamentos/cobrar" icon="↙" title="Cobrar com boleto" text="Emita um boleto para receber" />
+      </RowGroup>
+      <RowGroup title="Celular">
+        <ListRow to="/recarga" icon="▯" title="Recarga de celular" text="Todas as operadoras" />
+      </RowGroup>
+    </div>
+  )
+}
+
+export function PayBoletoPage() {
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Pagar boleto" back="/pagamentos" />
+      <PayBoleto />
+    </div>
+  )
+}
+
+export function IssueBoletoPage() {
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Cobrar com boleto" back="/pagamentos" />
+      <IssueBoleto />
+    </div>
+  )
+}
+
+export function RechargePage() {
+  return (
+    <div className="stack-lg">
+      <PageHeader title="Recarga de celular" />
+      <Recharge />
     </div>
   )
 }

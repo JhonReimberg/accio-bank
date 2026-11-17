@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router'
 import { useAuth } from '../../lib/useAuth'
+import { Logo } from '../../components/Mascot'
 
 const links = [
   { to: '/backoffice', label: 'Painel', icon: '▦', end: true },
@@ -17,15 +18,7 @@ export default function BackofficeLayout() {
   return (
     <div className="app backoffice">
       <aside className="sidebar">
-        <div className="brand-row">
-          <span className="logo" aria-hidden>
-            V
-          </span>
-          <div>
-            <strong>Vela</strong>
-            <p className="muted small">Back-office · {session?.role === 'Admin' ? 'Admin' : 'Analista'}</p>
-          </div>
-        </div>
+        <Logo subtitle={`Back-office · ${session?.role === 'Admin' ? 'Admin' : 'Analista'}`} />
         <nav aria-label="Back-office">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className="nav-link">
