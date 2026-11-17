@@ -1,5 +1,6 @@
 # Vela — banco digital (projeto de portfólio)
 
+[![CI](https://github.com/JhonReimberg/vela-banco-digital/actions/workflows/ci.yml/badge.svg)](https://github.com/JhonReimberg/vela-banco-digital/actions/workflows/ci.yml)
 ![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-Minimal_APIs-512BD4)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
