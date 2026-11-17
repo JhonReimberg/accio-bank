@@ -14,12 +14,13 @@ internal class CurrentUser(IHttpContextAccessor accessor) : ICurrentUser
 
     public string? IpAddress => accessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
 
-    public string? UserAgent
+    public string? UserAgent => Header("User-Agent", 300);
+
+    public string? DeviceKey => Header("X-Device-Id", 100);
+
+    private string? Header(string name, int maxLength)
     {
-        get
-        {
-            var ua = accessor.HttpContext?.Request.Headers.UserAgent.ToString();
-            return string.IsNullOrEmpty(ua) ? null : ua[..Math.Min(ua.Length, 300)];
-        }
+        var value = accessor.HttpContext?.Request.Headers[name].ToString().Trim();
+        return string.IsNullOrEmpty(value) ? null : value[..Math.Min(value.Length, maxLength)];
     }
 }

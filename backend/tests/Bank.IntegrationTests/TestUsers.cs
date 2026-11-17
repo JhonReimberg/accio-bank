@@ -14,15 +14,18 @@ public record TestUser(HttpClient Client, string Email, string Number);
 internal static class TestUsers
 {
     public const string Password = "senha-forte-123";
+    public const string Pin = "2580";
 
-    public static async Task<TestUser> CreateAsync(BankApiFactory factory, decimal deposit = 0)
+    public static async Task<TestUser> CreateAsync(BankApiFactory factory, decimal deposit = 0, string? deviceId = null)
     {
         var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Device-Id", deviceId ?? Guid.NewGuid().ToString());
         var email = $"{Guid.NewGuid():N}@test.dev";
         var res = await client.PostAsJsonAsync("/api/auth/register", new RegisterRequest("Teste", email, Password));
         res.EnsureSuccessStatusCode();
-        var auth = await res.Content.ReadFromJsonAsync<AuthResponse>();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.Token);
+        var login = await res.Content.ReadFromJsonAsync<LoginResponse>();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login!.Session!.AccessToken);
+        (await client.PutAsJsonAsync("/api/security/pin", new SetPinRequest(Password, Pin))).EnsureSuccessStatusCode();
         if (deposit > 0)
             (await client.PostIdempotentAsync("/api/account/deposits", new DepositRequest(deposit))).EnsureSuccessStatusCode();
         return new TestUser(client, email, (await client.AccountAsync()).Number);
@@ -37,10 +40,17 @@ internal static class TestUsers
             var db = scope.ServiceProvider.GetRequiredService<BankDbContext>();
             await db.Users.Where(u => u.Email == user.Email).ExecuteUpdateAsync(s => s.SetProperty(u => u.Role, role));
         }
-        var login = await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest(user.Email, Password));
-        var auth = await login.Content.ReadFromJsonAsync<AuthResponse>();
+        return await LoginAsync(factory, user.Email);
+    }
+
+    public static async Task<HttpClient> LoginAsync(BankApiFactory factory, string email, string? deviceId = null)
+    {
         var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.Token);
+        client.DefaultRequestHeaders.Add("X-Device-Id", deviceId ?? Guid.NewGuid().ToString());
+        var res = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(email, Password));
+        res.EnsureSuccessStatusCode();
+        var login = await res.Content.ReadFromJsonAsync<LoginResponse>();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login!.Session!.AccessToken);
         return client;
     }
 
@@ -65,6 +75,6 @@ internal static class TestUsers
     public static async Task<AccountResponse> AccountAsync(this HttpClient client) =>
         (await client.GetFromJsonAsync<AccountResponse>("/api/account"))!;
 
-    public static Task<HttpResponseMessage> TransferAsync(this HttpClient client, string to, decimal amount, string? key = null) =>
-        client.PostIdempotentAsync("/api/account/transfers", new TransferRequest(to, amount), key);
+    public static Task<HttpResponseMessage> TransferAsync(this HttpClient client, string to, decimal amount, string? key = null, string pin = Pin) =>
+        client.PostIdempotentAsync("/api/account/transfers", new TransferRequest(to, amount, pin), key);
 }

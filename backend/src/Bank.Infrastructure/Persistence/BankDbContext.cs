@@ -9,15 +9,21 @@ using Bank.Domain.Notifications;
 using Bank.Domain.Users;
 using Bank.Infrastructure.Idempotency;
 using Bank.Infrastructure.Outbox;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 
 namespace Bank.Infrastructure.Persistence;
 
-public class BankDbContext(DbContextOptions<BankDbContext> options, TimeProvider clock) : DbContext(options), IBankDbContext
+public class BankDbContext(DbContextOptions<BankDbContext> options, TimeProvider clock)
+    : DbContext(options), IBankDbContext, IDataProtectionKeyContext
 {
     public DbSet<User> Users => Set<User>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Device> Devices => Set<Device>();
+    public DbSet<LoginAttempt> LoginAttempts => Set<LoginAttempt>();
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<BalanceHold> BalanceHolds => Set<BalanceHold>();
     public DbSet<LedgerTransaction> LedgerTransactions => Set<LedgerTransaction>();
@@ -81,5 +87,14 @@ public class BankDbContext(DbContextOptions<BankDbContext> options, TimeProvider
         return await Accounts
             .FromSql($"SELECT * FROM accounts WHERE id = ANY({idArray}) ORDER BY id FOR UPDATE")
             .ToListAsync(ct);
+    }
+
+    public async Task<User?> LockUserAsync(Guid id, CancellationToken ct)
+    {
+        if (Database.CurrentTransaction is null)
+            throw new InvalidOperationException("Row locks only last inside a transaction.");
+        foreach (var entry in ChangeTracker.Entries<User>().Where(e => e.Entity.Id == id).ToList())
+            entry.State = EntityState.Detached;
+        return await Users.FromSql($"SELECT * FROM users WHERE id = {id} FOR UPDATE").SingleOrDefaultAsync(ct);
     }
 }

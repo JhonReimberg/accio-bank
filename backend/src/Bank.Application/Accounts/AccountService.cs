@@ -1,5 +1,6 @@
 using Bank.Application.Abstractions;
 using Bank.Application.Auditing;
+using Bank.Application.Auth;
 using Bank.Application.Common;
 using Bank.Application.Ledger;
 using Bank.Domain.Accounts;
@@ -19,7 +20,8 @@ public record TransactionResponse(
 public record DepositRequest(decimal Amount);
 
 /// <param name="To">Account number or the recipient's e-mail.</param>
-public record TransferRequest(string To, decimal Amount);
+/// <param name="Pin">4-digit transaction PIN.</param>
+public record TransferRequest(string To, decimal Amount, string Pin);
 
 public record OperationResponse(Guid TransactionId);
 
@@ -34,6 +36,7 @@ public class TransferRequestValidator : AbstractValidator<TransferRequest>
     {
         RuleFor(x => x.To).NotEmpty().MaximumLength(200).WithName("Destinatário");
         RuleFor(x => x.Amount).MoneyAmount(max: 1_000_000).WithName("Valor");
+        RuleFor(x => x.Pin).NotEmpty().WithName("Senha transacional");
     }
 }
 
@@ -42,6 +45,7 @@ public class AccountService(
     ICurrentUser currentUser,
     LedgerPosting ledger,
     IAuditLog audit,
+    TransactionAuthorizer authorizer,
     IValidator<DepositRequest> depositValidator,
     IValidator<TransferRequest> transferValidator)
 {
@@ -89,6 +93,7 @@ public class AccountService(
     public async Task<OperationResponse> TransferAsync(TransferRequest request, CancellationToken ct)
     {
         await transferValidator.ValidateAndThrowAsync(request, ct);
+        await authorizer.VerifyPinAsync(request.Pin, ct);
         var userId = currentUser.UserId;
         var source = await CustomerAccounts().Where(c => c.UserId == userId).SingleOrDefaultAsync(ct)
             ?? throw new UnauthorizedException("Conta não encontrada.");

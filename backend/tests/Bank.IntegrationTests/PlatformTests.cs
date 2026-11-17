@@ -67,7 +67,9 @@ public class PlatformTests(BankApiFactory factory)
         var db = scope.ServiceProvider.GetRequiredService<BankDbContext>();
         var aliceId = await db.Users.Where(u => u.Email == alice.Email).Select(u => u.Id).SingleAsync();
         var actions = await db.AuditLogs.Where(a => a.ActorUserId == aliceId).OrderBy(a => a.CreatedAt).Select(a => a.Action).ToListAsync();
-        Assert.Equal(["auth.registered", "account.deposit", "account.transfer", "auth.login_failed"], actions);
+        Assert.Equal(
+            ["auth.registered", "auth.signed_in", "security.pin_created", "account.deposit", "account.transfer", "auth.login_failed"],
+            actions);
     }
 
     [Fact]

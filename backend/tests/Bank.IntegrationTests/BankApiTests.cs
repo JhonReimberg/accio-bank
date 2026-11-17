@@ -19,6 +19,7 @@ public class BankApiTests(BankApiFactory factory)
 
         var login = await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest(user.Email.ToUpperInvariant(), TestUsers.Password));
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        Assert.NotNull((await login.Content.ReadFromJsonAsync<LoginResponse>())!.Session?.AccessToken);
         var wrong = await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest(user.Email, "errada-123"));
         Assert.Equal(HttpStatusCode.Unauthorized, wrong.StatusCode);
     }

@@ -1,4 +1,5 @@
 using Bank.Application.Abstractions;
+using Bank.Application.Auth;
 using Bank.Infrastructure.Email;
 using Bank.Infrastructure.Idempotency;
 using Bank.Infrastructure.Outbox;
@@ -6,6 +7,7 @@ using Bank.Infrastructure.Persistence;
 using Bank.Infrastructure.Security;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,7 +28,14 @@ public static class DependencyInjection
         services.AddSingleton<ITokenService, TokenService>();
         services.AddSingleton<ISecretHasher, SecretHasher>();
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
+        services.AddSingleton<ITotpService, TotpService>();
+        services.AddSingleton<ISecretProtector, SecretProtector>();
+        services.AddSingleton<IQrCodeGenerator, QrCodeGenerator>();
+        services.AddSingleton(configuration.GetSection("Sessions").Get<SessionOptions>() ?? new SessionOptions());
         services.AddSingleton(TimeProvider.System);
+        services.AddDataProtection()
+            .SetApplicationName("vela-bank")
+            .PersistKeysToDbContext<BankDbContext>();
 
         var outbox = configuration.GetSection("Outbox").Get<OutboxOptions>() ?? new OutboxOptions();
         services.AddSingleton(outbox);

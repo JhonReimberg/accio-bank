@@ -15,8 +15,9 @@ export default function Auth({ onLogin }: Props) {
     setBusy(true)
     setError('')
     try {
-      const res = await api<{ token: string }>(`/auth/${mode}`, data)
-      onLogin(res.token)
+      const res = await api<{ session: { accessToken: string } | null }>(`/auth/${mode}`, data)
+      if (!res.session) throw new Error('Esta conta usa verificação em duas etapas.')
+      onLogin(res.session.accessToken)
     } catch (err) {
       setError((err as Error).message)
       setBusy(false)

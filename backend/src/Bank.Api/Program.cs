@@ -53,6 +53,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapAuthEndpoints();
 app.MapAccountEndpoints();
+app.MapSecurityEndpoints();
 app.MapNotificationEndpoints();
 app.MapAdminEndpoints();
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });

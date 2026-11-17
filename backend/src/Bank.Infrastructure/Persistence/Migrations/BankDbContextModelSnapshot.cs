@@ -322,6 +322,172 @@ namespace Bank.Infrastructure.Persistence.Migrations
                     b.ToTable("notifications", (string)null);
                 });
 
+            modelBuilder.Entity("Bank.Domain.Users.Device", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("DeviceKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("device_key");
+
+                    b.Property<DateTime>("FirstSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_seen_at");
+
+                    b.Property<string>("LastIpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("last_ip_address");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<bool>("Trusted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("trusted");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_devices");
+
+                    b.HasIndex("UserId", "DeviceKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_devices_user_id_device_key");
+
+                    b.ToTable("devices", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Users.LoginAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DeviceKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("device_key");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("failure_reason");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("ip_address");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("boolean")
+                        .HasColumnName("succeeded");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("user_agent");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_login_attempts");
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .HasDatabaseName("ix_login_attempts_user_id_created_at");
+
+                    b.ToTable("login_attempts", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Users.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("DeviceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("device_id");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid>("FamilyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("family_id");
+
+                    b.Property<Guid?>("ReplacedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("replaced_by_id");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("RevokedReason")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("revoked_reason");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_refresh_tokens");
+
+                    b.HasIndex("FamilyId")
+                        .HasDatabaseName("ix_refresh_tokens_family_id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_refresh_tokens_token_hash");
+
+                    b.HasIndex("UserId", "RevokedAt")
+                        .HasDatabaseName("ix_refresh_tokens_user_id_revoked_at");
+
+                    b.ToTable("refresh_tokens", (string)null);
+                });
+
             modelBuilder.Entity("Bank.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -339,6 +505,18 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("email");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("failed_login_attempts");
+
+                    b.Property<int>("FailedPinAttempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("failed_pin_attempts");
+
+                    b.Property<DateTime?>("LockoutEndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lockout_ends_at");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -350,11 +528,29 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
+                    b.Property<DateTime?>("PinLockoutEndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("pin_lockout_ends_at");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("role");
+
+                    b.Property<string>("TransactionPinHash")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("transaction_pin_hash");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("two_factor_enabled");
+
+                    b.Property<string>("TwoFactorSecret")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("two_factor_secret");
 
                     b.HasKey("Id")
                         .HasName("pk_users");
@@ -449,6 +645,29 @@ namespace Bank.Infrastructure.Persistence.Migrations
                     b.ToTable("outbox_messages", (string)null);
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("text")
+                        .HasColumnName("friendly_name");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("text")
+                        .HasColumnName("xml");
+
+                    b.HasKey("Id")
+                        .HasName("pk_data_protection_keys");
+
+                    b.ToTable("data_protection_keys", (string)null);
+                });
+
             modelBuilder.Entity("Bank.Domain.Accounts.Account", b =>
                 {
                     b.HasOne("Bank.Domain.Users.User", null)
@@ -492,6 +711,26 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_notifications_users_user_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Users.Device", b =>
+                {
+                    b.HasOne("Bank.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_devices_users_user_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Users.RefreshToken", b =>
+                {
+                    b.HasOne("Bank.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_refresh_tokens_users_user_id");
                 });
 
             modelBuilder.Entity("Bank.Domain.Ledger.LedgerTransaction", b =>
