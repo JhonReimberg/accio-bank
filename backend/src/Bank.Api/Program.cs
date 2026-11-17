@@ -64,7 +64,11 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c
 
 // shortcut: migrates on startup, fine for one instance; run migrations in the deploy pipeline when scaling out.
 using (var scope = app.Services.CreateScope())
+{
     await scope.ServiceProvider.GetRequiredService<BankDbContext>().Database.MigrateAsync();
+    if (app.Configuration.GetValue("Seed:Enabled", false))
+        await scope.ServiceProvider.GetRequiredService<Bank.Infrastructure.Persistence.Seeding.DemoDataSeeder>().SeedAsync(CancellationToken.None);
+}
 
 if (Bank.Infrastructure.DependencyInjection.JobsEnabled(app.Configuration))
 {

@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddDbContext<BankDbContext>(o => ConfigureDbContext(o, connectionString));
         services.AddScoped<IBankDbContext>(sp => sp.GetRequiredService<BankDbContext>());
         services.AddScoped<IdempotencyStore>();
+        services.AddScoped<Persistence.Seeding.DemoDataSeeder>();
 
         services.AddSingleton(GetJwtOptions(configuration));
         services.AddSingleton<ITokenService, TokenService>();

@@ -77,11 +77,11 @@ internal static class TestUsers
         return await LoginAsync(factory, user.Email);
     }
 
-    public static async Task<HttpClient> LoginAsync(BankApiFactory factory, string email, string? deviceId = null)
+    public static async Task<HttpClient> LoginAsync(BankApiFactory factory, string email, string? deviceId = null, string password = Password)
     {
         var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Device-Id", deviceId ?? Guid.NewGuid().ToString());
-        var res = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(email, Password));
+        var res = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(email, password));
         res.EnsureSuccessStatusCode();
         var login = await res.Content.ReadFromJsonAsync<LoginResponse>();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login!.Session!.AccessToken);

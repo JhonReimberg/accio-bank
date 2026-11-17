@@ -28,6 +28,8 @@ services:
       # Demo: a simulated analyst approves KYC on submission. Set to false to use the back-office queue.
       Kyc__AutoApprove: "true"
       Storage__Root: /app/storage
+      # Demo customers and staff (see README). Runs once on an empty database.
+      Seed__Enabled: "true"
     volumes:
       - storage:/app/storage
     ports:
