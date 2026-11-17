@@ -3,6 +3,7 @@ using Bank.Application.Accounts;
 using Bank.Application.Auth;
 using Bank.Infrastructure.Documents;
 using Bank.Application.Onboarding;
+using Bank.Application.Pix;
 using Bank.Infrastructure.Email;
 using Bank.Infrastructure.External;
 using Bank.Infrastructure.Storage;
@@ -38,6 +39,7 @@ public static class DependencyInjection
         services.AddSingleton<IQrCodeGenerator, QrCodeGenerator>();
         services.AddSingleton(configuration.GetSection("Sessions").Get<SessionOptions>() ?? new SessionOptions());
         services.AddSingleton(configuration.GetSection("Kyc").Get<KycOptions>() ?? new KycOptions());
+        services.AddSingleton(configuration.GetSection("Pix").Get<PixOptions>() ?? new PixOptions());
         services.AddSingleton(configuration.GetSection("Storage").Get<StorageOptions>() ?? new StorageOptions());
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         // Free Community license: fine for this non-commercial portfolio project.

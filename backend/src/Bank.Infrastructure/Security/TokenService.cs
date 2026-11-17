@@ -23,8 +23,13 @@ public static class ClaimNames
     public const string Device = "dev";
 }
 
-internal class TokenService(JwtOptions options, TimeProvider clock) : ITokenService
+/// <summary>
+/// Uses real time on purpose (not the injected business clock): token lifetimes are validated against the
+/// real clock, so tokens must be issued on it too.
+/// </summary>
+internal class TokenService(JwtOptions options) : ITokenService
 {
+    private static readonly TimeProvider clock = TimeProvider.System;
     private static readonly TimeSpan ChallengeLifetime = TimeSpan.FromMinutes(5);
     private readonly JsonWebTokenHandler _handler = new();
 

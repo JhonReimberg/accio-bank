@@ -469,6 +469,345 @@ namespace Bank.Infrastructure.Persistence.Migrations
                     b.ToTable("notifications", (string)null);
                 });
 
+            modelBuilder.Entity("Bank.Domain.Pix.PixContact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("KeyType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("key_type");
+
+                    b.Property<string>("KeyValue")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("key_value");
+
+                    b.Property<string>("Nickname")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("nickname");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_pix_contacts");
+
+                    b.HasIndex("OwnerUserId", "KeyValue")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pix_contacts_owner_user_id_key_value");
+
+                    b.ToTable("pix_contacts", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixKey", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("type");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id")
+                        .HasName("pk_pix_keys");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_pix_keys_account_id");
+
+                    b.HasIndex("Value")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pix_keys_value");
+
+                    b.ToTable("pix_keys", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixLimitSettings", b =>
+                {
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<decimal>("DaytimeLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("daytime_limit");
+
+                    b.Property<decimal>("NighttimeLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("nighttime_limit");
+
+                    b.Property<decimal?>("PendingDaytimeLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("pending_daytime_limit");
+
+                    b.Property<DateTime?>("PendingEffectiveAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("pending_effective_at");
+
+                    b.Property<decimal?>("PendingNighttimeLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("pending_nighttime_limit");
+
+                    b.HasKey("AccountId")
+                        .HasName("pk_pix_limits");
+
+                    b.ToTable("pix_limits", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixRefund", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EndToEndId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("end_to_end_id");
+
+                    b.Property<Guid>("LedgerTransactionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ledger_transaction_id");
+
+                    b.Property<Guid>("PixTransferId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("pix_transfer_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)")
+                        .HasColumnName("reason");
+
+                    b.HasKey("Id")
+                        .HasName("pk_pix_refund");
+
+                    b.HasIndex("EndToEndId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pix_refund_end_to_end_id");
+
+                    b.HasIndex("LedgerTransactionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pix_refund_ledger_transaction_id");
+
+                    b.HasIndex("PixTransferId")
+                        .HasDatabaseName("ix_pix_refund_pix_transfer_id");
+
+                    b.ToTable("pix_refund", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixSchedule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)")
+                        .HasColumnName("description");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<int>("Executions")
+                        .HasColumnType("integer")
+                        .HasColumnName("executions");
+
+                    b.Property<DateOnly>("FirstDate")
+                        .HasColumnType("date")
+                        .HasColumnName("first_date");
+
+                    b.Property<string>("Frequency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("frequency");
+
+                    b.Property<string>("KeyType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("key_type");
+
+                    b.Property<string>("KeyValue")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("key_value");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateOnly>("NextRunDate")
+                        .HasColumnType("date")
+                        .HasColumnName("next_run_date");
+
+                    b.Property<Guid>("PayerAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payer_account_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_pix_schedules");
+
+                    b.HasIndex("PayerAccountId")
+                        .HasDatabaseName("ix_pix_schedules_payer_account_id");
+
+                    b.HasIndex("Status", "NextRunDate")
+                        .HasDatabaseName("ix_pix_schedules_status_next_run_date");
+
+                    b.ToTable("pix_schedules", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixTransfer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("EndToEndId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("end_to_end_id");
+
+                    b.Property<string>("KeyType")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("key_type");
+
+                    b.Property<string>("KeyValue")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("key_value");
+
+                    b.Property<Guid>("LedgerTransactionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ledger_transaction_id");
+
+                    b.Property<Guid>("PayeeAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payee_account_id");
+
+                    b.Property<Guid>("PayerAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payer_account_id");
+
+                    b.Property<decimal>("RefundedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("refunded_amount");
+
+                    b.Property<Guid?>("ScheduleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("schedule_id");
+
+                    b.Property<DateOnly?>("ScheduleOccurrence")
+                        .HasColumnType("date")
+                        .HasColumnName("schedule_occurrence");
+
+                    b.HasKey("Id")
+                        .HasName("pk_pix_transfers");
+
+                    b.HasIndex("EndToEndId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pix_transfers_end_to_end_id");
+
+                    b.HasIndex("LedgerTransactionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pix_transfers_ledger_transaction_id");
+
+                    b.HasIndex("PayeeAccountId")
+                        .HasDatabaseName("ix_pix_transfers_payee_account_id");
+
+                    b.HasIndex("PayerAccountId", "CreatedAt")
+                        .HasDatabaseName("ix_pix_transfers_payer_account_id_created_at");
+
+                    b.HasIndex("ScheduleId", "ScheduleOccurrence")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pix_transfers_schedule_id_schedule_occurrence")
+                        .HasFilter("schedule_id IS NOT NULL");
+
+                    b.ToTable("pix_transfers", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_pix_transfers_refund_within_amount", "refunded_amount >= 0 AND refunded_amount <= amount");
+                        });
+                });
+
             modelBuilder.Entity("Bank.Domain.Users.Device", b =>
                 {
                     b.Property<Guid>("Id")
@@ -934,6 +1273,73 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_notifications_users_user_id");
                 });
 
+            modelBuilder.Entity("Bank.Domain.Pix.PixContact", b =>
+                {
+                    b.HasOne("Bank.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_pix_contacts_users_owner_user_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixKey", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_pix_keys_accounts_account_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixLimitSettings", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithOne()
+                        .HasForeignKey("Bank.Domain.Pix.PixLimitSettings", "AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_pix_limits_accounts_account_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixRefund", b =>
+                {
+                    b.HasOne("Bank.Domain.Pix.PixTransfer", null)
+                        .WithMany("Refunds")
+                        .HasForeignKey("PixTransferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_pix_refund_pix_transfers_pix_transfer_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixSchedule", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("PayerAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_pix_schedules_accounts_payer_account_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixTransfer", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("PayeeAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_pix_transfers_accounts_payee_account_id");
+
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("PayerAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_pix_transfers_accounts_payer_account_id");
+                });
+
             modelBuilder.Entity("Bank.Domain.Users.Device", b =>
                 {
                     b.HasOne("Bank.Domain.Users.User", null)
@@ -962,6 +1368,11 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Ledger.LedgerTransaction", b =>
                 {
                     b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Pix.PixTransfer", b =>
+                {
+                    b.Navigation("Refunds");
                 });
 #pragma warning restore 612, 618
         }

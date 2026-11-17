@@ -3,6 +3,7 @@ using Bank.Domain.Auditing;
 using Bank.Domain.Customers;
 using Bank.Domain.Ledger;
 using Bank.Domain.Notifications;
+using Bank.Domain.Pix;
 using Bank.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -20,10 +21,18 @@ public interface IBankDbContext
     DbSet<BalanceHold> BalanceHolds { get; }
     DbSet<LedgerTransaction> LedgerTransactions { get; }
     DbSet<LedgerEntry> LedgerEntries { get; }
+    DbSet<PixKey> PixKeys { get; }
+    DbSet<PixTransfer> PixTransfers { get; }
+    DbSet<PixLimitSettings> PixLimits { get; }
+    DbSet<PixSchedule> PixSchedules { get; }
+    DbSet<PixContact> PixContacts { get; }
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<Notification> Notifications { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
+
+    /// <summary>Forgets every pending change (after a failed operation, before recording the failure).</summary>
+    void DiscardChanges();
 
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct);
 

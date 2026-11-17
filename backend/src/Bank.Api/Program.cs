@@ -3,6 +3,7 @@ using Bank.Api.Infrastructure;
 using Bank.Application;
 using Bank.Application.Common;
 using Bank.Application.Jobs;
+using Bank.Application.Pix;
 using Bank.Infrastructure;
 using Bank.Infrastructure.Persistence;
 using Hangfire;
@@ -53,6 +54,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapAuthEndpoints();
 app.MapAccountEndpoints();
+app.MapPixEndpoints();
 app.MapOnboardingEndpoints();
 app.MapSecurityEndpoints();
 app.MapNotificationEndpoints();
@@ -69,8 +71,10 @@ if (Bank.Infrastructure.DependencyInjection.JobsEnabled(app.Configuration))
     if (app.Environment.IsDevelopment())
         app.MapHangfireDashboard("/hangfire", new DashboardOptions { Authorization = [new DevelopmentDashboardAuthorization()] });
     var jobs = app.Services.GetRequiredService<IRecurringJobManager>();
-    jobs.AddOrUpdate<ReconcileLedgerJob>("reconcile-ledger", j => j.RunAsync(CancellationToken.None), "0 3 * * *",
-        new RecurringJobOptions { TimeZone = BankTime.SaoPaulo });
+    var brasilia = new RecurringJobOptions { TimeZone = BankTime.SaoPaulo };
+    jobs.AddOrUpdate<ReconcileLedgerJob>("reconcile-ledger", j => j.RunAsync(CancellationToken.None), "0 3 * * *", brasilia);
+    // Every 10 minutes so a PIX scheduled for "today" goes out soon after it is created (good for the demo).
+    jobs.AddOrUpdate<ExecuteScheduledPixJob>("scheduled-pix", j => j.RunAsync(CancellationToken.None), "*/10 * * * *", brasilia);
 }
 
 app.Run();

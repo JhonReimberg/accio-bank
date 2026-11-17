@@ -8,6 +8,7 @@ using Bank.Application.Jobs;
 using Bank.Application.Ledger;
 using Bank.Application.Notifications;
 using Bank.Application.Onboarding;
+using Bank.Application.Pix;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,6 +35,14 @@ public static class DependencyInjection
         services.AddScoped<OnboardingService>();
         services.AddScoped<KycReviewService>();
         services.AddScoped<ReconcileLedgerJob>();
+        services.AddScoped<PixDirectory>();
+        services.AddScoped<PixPayments>();
+        services.AddScoped<PixService>();
+        services.AddScoped<PixKeyService>();
+        services.AddScoped<PixScheduleService>();
+        services.AddScoped<PixScheduleRunner>();
+        services.AddScoped<ExecuteScheduledPixJob>();
+        services.AddScoped<IReceiptDetailsProvider, PixReceiptDetails>();
         AddDomainEventHandlers(services);
         return services;
     }

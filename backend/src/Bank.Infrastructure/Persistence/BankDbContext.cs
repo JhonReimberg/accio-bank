@@ -7,6 +7,7 @@ using Bank.Domain.Common;
 using Bank.Domain.Customers;
 using Bank.Domain.Ledger;
 using Bank.Domain.Notifications;
+using Bank.Domain.Pix;
 using Bank.Domain.Users;
 using Bank.Infrastructure.Idempotency;
 using Bank.Infrastructure.Outbox;
@@ -30,6 +31,11 @@ public class BankDbContext(DbContextOptions<BankDbContext> options, TimeProvider
     public DbSet<BalanceHold> BalanceHolds => Set<BalanceHold>();
     public DbSet<LedgerTransaction> LedgerTransactions => Set<LedgerTransaction>();
     public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
+    public DbSet<PixKey> PixKeys => Set<PixKey>();
+    public DbSet<PixTransfer> PixTransfers => Set<PixTransfer>();
+    public DbSet<PixLimitSettings> PixLimits => Set<PixLimitSettings>();
+    public DbSet<PixSchedule> PixSchedules => Set<PixSchedule>();
+    public DbSet<PixContact> PixContacts => Set<PixContact>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
@@ -80,6 +86,8 @@ public class BankDbContext(DbContextOptions<BankDbContext> options, TimeProvider
     }
 
     public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct) => Database.BeginTransactionAsync(ct);
+
+    public void DiscardChanges() => ChangeTracker.Clear();
 
     public async Task<IReadOnlyList<Account>> LockAccountsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct)
     {
