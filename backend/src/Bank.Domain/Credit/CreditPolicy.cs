@@ -37,6 +37,8 @@ public class CreditPolicy
     public decimal OverdraftMonthlyRate { get; private set; } = 0.08m;
     /// <summary>Reference rate for investments (phase 3), kept here so the Admin edits all rates in one place.</summary>
     public decimal CdiAnnualRate { get; private set; } = 0.1065m;
+    /// <summary>Rate for loans backed by an investment (lower: the bank holds collateral).</summary>
+    public decimal GuaranteedMonthlyRate { get; private set; } = 0.019m;
     public List<ScoreBand> Bands { get; private set; } =
     [
         new() { MinScore = 400, MonthlyRate = 0.069m, PreApprovedIncomeMultiplier = 1m, OverdraftLimit = 500m },
@@ -64,6 +66,7 @@ public class CreditPolicy
         Ensure(v.DailyLateInterestRate is >= 0 and <= 0.01m, "Juros de mora diários inválidos.");
         Ensure(v.OverdraftMonthlyRate is >= 0 and <= 0.08m, "Juros do cheque especial limitados a 8% a.m. (regra do BC).");
         Ensure(v.CdiAnnualRate is >= 0 and <= 1, "CDI inválido.");
+        Ensure(v.GuaranteedMonthlyRate is > 0 and < 0.2m, "Taxa do crédito com garantia inválida.");
         Ensure(v.Bands.Count > 0, "Informe ao menos uma faixa de score.");
         Ensure(v.Bands.Select(b => b.MinScore).Distinct().Count() == v.Bands.Count, "Faixas com score mínimo repetido.");
         foreach (var b in v.Bands)
@@ -80,8 +83,8 @@ public class CreditPolicy
 
         (MinAccountAgeDays, MinMovement30Days, MinScore, MaxIncomeCommitment, MinInstallments, MaxInstallments, MinLoanAmount) =
             (v.MinAccountAgeDays, v.MinMovement30Days, v.MinScore, v.MaxIncomeCommitment, v.MinInstallments, v.MaxInstallments, v.MinLoanAmount);
-        (LateFeeRate, DailyLateInterestRate, OverdraftMonthlyRate, CdiAnnualRate) =
-            (v.LateFeeRate, v.DailyLateInterestRate, v.OverdraftMonthlyRate, v.CdiAnnualRate);
+        (LateFeeRate, DailyLateInterestRate, OverdraftMonthlyRate, CdiAnnualRate, GuaranteedMonthlyRate) =
+            (v.LateFeeRate, v.DailyLateInterestRate, v.OverdraftMonthlyRate, v.CdiAnnualRate, v.GuaranteedMonthlyRate);
         Bands = ordered;
         UpdatedAt = now;
         UpdatedBy = updatedBy;
@@ -97,4 +100,5 @@ public sealed record CreditPolicyValues(
     int MinAccountAgeDays, decimal MinMovement30Days, int MinScore, decimal MaxIncomeCommitment,
     int MinInstallments, int MaxInstallments, decimal MinLoanAmount,
     decimal LateFeeRate, decimal DailyLateInterestRate, decimal OverdraftMonthlyRate, decimal CdiAnnualRate,
-    IReadOnlyList<ScoreBand> Bands);
+    IReadOnlyList<ScoreBand> Bands,
+    decimal GuaranteedMonthlyRate = 0.019m);

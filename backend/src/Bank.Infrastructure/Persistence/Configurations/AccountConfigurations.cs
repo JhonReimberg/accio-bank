@@ -51,7 +51,11 @@ internal class AccountConfiguration : IEntityTypeConfiguration<Account>
             System(SystemAccounts.Cash, 1, "Caixa"),
             System(SystemAccounts.LoanPortfolio, 2, "Carteira de crédito"),
             System(SystemAccounts.CreditRevenue, 3, "Receitas de crédito"),
-            System(SystemAccounts.IofPayable, 4, "IOF a recolher"));
+            System(SystemAccounts.IofPayable, 4, "IOF a recolher"),
+            System(SystemAccounts.InvestmentCustody, 5, "Custódia de investimentos"),
+            System(SystemAccounts.InvestmentYieldExpense, 6, "Despesa com rendimentos"),
+            System(SystemAccounts.IncomeTaxPayable, 7, "IR a recolher"),
+            System(SystemAccounts.CardSettlement, 8, "Liquidação de cartões"));
     }
 
     private static object System(Guid id, long number, string name) => new

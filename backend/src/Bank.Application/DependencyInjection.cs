@@ -45,6 +45,9 @@ public static class DependencyInjection
         services.AddScoped<ExecuteScheduledPixJob>();
         services.AddScoped<IReceiptDetailsProvider, PixReceiptDetails>();
 
+        services.AddScoped<Investments.InvestmentService>();
+        services.AddScoped<Investments.GuaranteedLoanService>();
+        services.AddScoped<Investments.AccrueInvestmentYieldJob>();
         services.AddScoped<CreditData>();
         services.AddScoped<ScoreService>();
         services.AddScoped<CreditService>();

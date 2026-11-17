@@ -14,4 +14,16 @@ public static class SystemAccounts
 
     /// <summary>IOF withheld from customers, owed to the government.</summary>
     public static readonly Guid IofPayable = new("00000000-0000-0000-0000-000000000004");
+
+    /// <summary>Customers' money held in investments (principal).</summary>
+    public static readonly Guid InvestmentCustody = new("00000000-0000-0000-0000-000000000005");
+
+    /// <summary>Yield the bank pays on investments, recognized at redemption.</summary>
+    public static readonly Guid InvestmentYieldExpense = new("00000000-0000-0000-0000-000000000006");
+
+    /// <summary>Income tax withheld on investment income, owed to the government.</summary>
+    public static readonly Guid IncomeTaxPayable = new("00000000-0000-0000-0000-000000000007");
+
+    /// <summary>Card purchases: merchants are paid from here (simulated card network settlement).</summary>
+    public static readonly Guid CardSettlement = new("00000000-0000-0000-0000-000000000008");
 }

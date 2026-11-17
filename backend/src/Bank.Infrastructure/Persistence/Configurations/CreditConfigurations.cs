@@ -15,7 +15,7 @@ internal class CreditPolicyConfiguration : IEntityTypeConfiguration<CreditPolicy
         foreach (var name in new[] { nameof(CreditPolicy.MinMovement30Days), nameof(CreditPolicy.MinLoanAmount) })
             b.Property(name).HasPrecision(18, 2);
         foreach (var name in new[] { nameof(CreditPolicy.MaxIncomeCommitment), nameof(CreditPolicy.LateFeeRate), nameof(CreditPolicy.DailyLateInterestRate),
-                     nameof(CreditPolicy.OverdraftMonthlyRate), nameof(CreditPolicy.CdiAnnualRate) })
+                     nameof(CreditPolicy.OverdraftMonthlyRate), nameof(CreditPolicy.CdiAnnualRate), nameof(CreditPolicy.GuaranteedMonthlyRate) })
             b.Property(name).HasPrecision(10, 6);
         b.Ignore(p => p.OverdraftDailyRate);
         // Bands are a value list edited as a whole by the Admin: one JSON column.

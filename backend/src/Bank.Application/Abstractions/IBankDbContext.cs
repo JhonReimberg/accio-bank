@@ -2,6 +2,7 @@ using Bank.Domain.Accounts;
 using Bank.Domain.Auditing;
 using Bank.Domain.Credit;
 using Bank.Domain.Customers;
+using Bank.Domain.Investments;
 using Bank.Domain.Ledger;
 using Bank.Domain.Notifications;
 using Bank.Domain.Pix;
@@ -31,6 +32,7 @@ public interface IBankDbContext
     DbSet<CreditScore> CreditScores { get; }
     DbSet<Loan> Loans { get; }
     DbSet<LoanInstallment> LoanInstallments { get; }
+    DbSet<Investment> Investments { get; }
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<Notification> Notifications { get; }
 

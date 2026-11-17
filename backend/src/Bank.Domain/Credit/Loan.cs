@@ -51,10 +51,15 @@ public class Loan : Entity
 
     public decimal OutstandingPrincipal => _installments.Where(i => i.Status != InstallmentStatus.Paid).Sum(i => i.Principal);
 
-    public static Loan Contract(Guid accountId, Guid userId, LoanQuote quote, int score, Guid disbursementTransactionId, DateTime now)
+    /// <summary>Investment pledged as collateral (guaranteed loan), if any.</summary>
+    public Guid? GuaranteeInvestmentId { get; private set; }
+
+    public static Loan Contract(Guid accountId, Guid userId, LoanQuote quote, int score, Guid disbursementTransactionId, DateTime now,
+        Guid? guaranteeInvestmentId = null)
     {
         var loan = new Loan
         {
+            GuaranteeInvestmentId = guaranteeInvestmentId,
             AccountId = accountId,
             UserId = userId,
             Amount = quote.RequestedAmount,

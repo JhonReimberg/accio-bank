@@ -14,6 +14,13 @@ public enum TransactionKind
     LoanDisbursement,
     LoanPayment,
     OverdraftInterest,
+    InvestmentApplication,
+    InvestmentRedemption,
+    CardPurchase,
+    CardInvoicePayment,
+    CardInterest,
+    BoletoPayment,
+    MobileRecharge,
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter<EntryDirection>))]

@@ -162,6 +162,58 @@ namespace Bank.Infrastructure.Persistence.Migrations
                             SystemName = "IOF a recolher",
                             Tier = "Basic",
                             Type = "System"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000005"),
+                            Balance = 0m,
+                            BlockedBalance = 0m,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Number = 5L,
+                            OverdraftLimit = 0m,
+                            Status = "Active",
+                            SystemName = "Custódia de investimentos",
+                            Tier = "Basic",
+                            Type = "System"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000006"),
+                            Balance = 0m,
+                            BlockedBalance = 0m,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Number = 6L,
+                            OverdraftLimit = 0m,
+                            Status = "Active",
+                            SystemName = "Despesa com rendimentos",
+                            Tier = "Basic",
+                            Type = "System"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000007"),
+                            Balance = 0m,
+                            BlockedBalance = 0m,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Number = 7L,
+                            OverdraftLimit = 0m,
+                            Status = "Active",
+                            SystemName = "IR a recolher",
+                            Tier = "Basic",
+                            Type = "System"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000008"),
+                            Balance = 0m,
+                            BlockedBalance = 0m,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Number = 8L,
+                            OverdraftLimit = 0m,
+                            Status = "Active",
+                            SystemName = "Liquidação de cartões",
+                            Tier = "Basic",
+                            Type = "System"
                         });
                 });
 
@@ -283,6 +335,11 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasPrecision(10, 6)
                         .HasColumnType("numeric(10,6)")
                         .HasColumnName("daily_late_interest_rate");
+
+                    b.Property<decimal>("GuaranteedMonthlyRate")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("numeric(10,6)")
+                        .HasColumnName("guaranteed_monthly_rate");
 
                     b.Property<decimal>("LateFeeRate")
                         .HasPrecision(10, 6)
@@ -406,6 +463,10 @@ namespace Bank.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("DisbursementTransactionId")
                         .HasColumnType("uuid")
                         .HasColumnName("disbursement_transaction_id");
+
+                    b.Property<Guid?>("GuaranteeInvestmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("guarantee_investment_id");
 
                     b.Property<decimal>("InstallmentAmount")
                         .HasPrecision(18, 2)
@@ -678,6 +739,96 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_kyc_document_customer_id");
 
                     b.ToTable("kyc_document", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Investments.Investment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<decimal>("BlockedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("blocked_amount");
+
+                    b.Property<decimal>("CdiPercent")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)")
+                        .HasColumnName("cdi_percent");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal?>("Goal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("goal");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("name");
+
+                    b.Property<bool>("RoundUpCardPurchases")
+                        .HasColumnType("boolean")
+                        .HasColumnName("round_up_card_purchases");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_investments");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_investments_account_id");
+
+                    b.ToTable("investments", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_investments_blocked_non_negative", "blocked_amount >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Bank.Domain.Investments.InvestmentLot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("applied_at");
+
+                    b.Property<Guid>("InvestmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("investment_id");
+
+                    b.Property<decimal>("Principal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("principal");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id")
+                        .HasName("pk_investment_lot");
+
+                    b.HasIndex("InvestmentId")
+                        .HasDatabaseName("ix_investment_lot_investment_id");
+
+                    b.ToTable("investment_lot", (string)null);
                 });
 
             modelBuilder.Entity("Bank.Domain.Ledger.LedgerEntry", b =>
@@ -1637,6 +1788,26 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_kyc_document_customers_customer_id");
                 });
 
+            modelBuilder.Entity("Bank.Domain.Investments.Investment", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_investments_accounts_account_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Investments.InvestmentLot", b =>
+                {
+                    b.HasOne("Bank.Domain.Investments.Investment", null)
+                        .WithMany("Lots")
+                        .HasForeignKey("InvestmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_investment_lot_investments_investment_id");
+                });
+
             modelBuilder.Entity("Bank.Domain.Ledger.LedgerEntry", b =>
                 {
                     b.HasOne("Bank.Domain.Accounts.Account", null)
@@ -1759,6 +1930,11 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Customers.Customer", b =>
                 {
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Investments.Investment", b =>
+                {
+                    b.Navigation("Lots");
                 });
 
             modelBuilder.Entity("Bank.Domain.Ledger.LedgerTransaction", b =>
