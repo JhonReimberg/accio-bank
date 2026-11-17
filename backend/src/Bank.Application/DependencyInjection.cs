@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<SecurityService>();
         services.AddScoped<TransactionAuthorizer>();
         services.AddScoped<AccountService>();
+        services.AddScoped<StatementService>();
         services.AddScoped<NotificationService>();
         services.AddScoped<AdminService>();
         services.AddScoped<OnboardingService>();

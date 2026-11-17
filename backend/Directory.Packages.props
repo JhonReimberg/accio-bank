@@ -24,6 +24,7 @@
     <!-- Security / documents -->
     <PackageVersion Include="Otp.NET" Version="1.4.1" />
     <PackageVersion Include="QRCoder" Version="1.8.1" />
+    <PackageVersion Include="QuestPDF" Version="2026.9.2" />
     <!-- Jobs -->
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.25" />
     <PackageVersion Include="Hangfire.PostgreSql" Version="1.21.1" />

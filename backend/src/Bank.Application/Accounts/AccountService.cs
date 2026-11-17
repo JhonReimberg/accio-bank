@@ -15,9 +15,6 @@ public record AccountResponse(
     string Name, string Email, string Number, AccountStatus Status, AccountTier Tier,
     decimal AvailableBalance, decimal BlockedBalance, decimal TotalBalance);
 
-public record TransactionResponse(
-    Guid Id, TransactionKind Kind, decimal Amount, string Description, decimal BalanceAfter, DateTime CreatedAt);
-
 public record DepositRequest(decimal Amount);
 
 /// <param name="To">Account number or the recipient's e-mail.</param>
@@ -60,21 +57,6 @@ public class AccountService(
                 select new AccountResponse(
                     u.Name, u.Email, a.Number.ToString(), a.Status, a.Tier, a.Balance - a.BlockedBalance, a.BlockedBalance, a.Balance))
             .SingleOrDefaultAsync(ct) ?? throw new UnauthorizedException("Conta não encontrada.");
-    }
-
-    public async Task<IReadOnlyList<TransactionResponse>> GetTransactionsAsync(CancellationToken ct)
-    {
-        var accountId = await MyAccountIdAsync(ct);
-        // shortcut: fixed page of the latest 50, replaced by the filtered/paginated statement later in phase 1.
-        return await (
-                from e in db.LedgerEntries
-                join t in db.LedgerTransactions on e.TransactionId equals t.Id
-                where e.AccountId == accountId
-                orderby e.CreatedAt descending
-                select new TransactionResponse(
-                    t.Id, t.Kind, e.Direction == EntryDirection.Credit ? e.Amount : -e.Amount, e.Description, e.BalanceAfter, e.CreatedAt))
-            .Take(50)
-            .ToListAsync(ct);
     }
 
     public async Task<OperationResponse> DepositAsync(DepositRequest request, CancellationToken ct)

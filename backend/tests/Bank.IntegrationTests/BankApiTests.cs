@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Bank.Application.Accounts;
 using Bank.Application.Auth;
+using Bank.Application.Common;
 using Bank.Domain.Ledger;
 
 namespace Bank.IntegrationTests;
@@ -61,7 +62,7 @@ public class BankApiTests(BankApiFactory factory)
 
         Assert.Equal(70m, (await alice.Client.AccountAsync()).AvailableBalance);
         Assert.Equal(30m, (await bob.Client.AccountAsync()).AvailableBalance);
-        var statement = (await alice.Client.GetFromJsonAsync<List<TransactionResponse>>("/api/account/transactions"))!;
+        var statement = (await alice.Client.GetFromJsonAsync<PagedResult<StatementItem>>("/api/account/statement"))!.Items;
         Assert.Equal([0.50m, -30.50m, 100m], statement.Select(t => t.Amount));
         Assert.Equal([70m, 69.50m, 100m], statement.Select(t => t.BalanceAfter));
         Assert.Equal(TransactionKind.Deposit, statement[^1].Kind);

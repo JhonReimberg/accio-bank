@@ -1,5 +1,7 @@
 using Bank.Application.Abstractions;
+using Bank.Application.Accounts;
 using Bank.Application.Auth;
+using Bank.Infrastructure.Documents;
 using Bank.Application.Onboarding;
 using Bank.Infrastructure.Email;
 using Bank.Infrastructure.External;
@@ -38,6 +40,9 @@ public static class DependencyInjection
         services.AddSingleton(configuration.GetSection("Kyc").Get<KycOptions>() ?? new KycOptions());
         services.AddSingleton(configuration.GetSection("Storage").Get<StorageOptions>() ?? new StorageOptions());
         services.AddSingleton<IFileStorage, LocalFileStorage>();
+        // Free Community license: fine for this non-commercial portfolio project.
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+        services.AddSingleton<IReceiptRenderer, QuestPdfReceiptRenderer>();
         services.AddHttpClient<ICepLookup, ViaCepLookup>(c =>
         {
             c.BaseAddress = new Uri(configuration["ViaCep:BaseUrl"] ?? "https://viacep.com.br/");
