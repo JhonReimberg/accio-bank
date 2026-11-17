@@ -16,6 +16,7 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
         b.Property(u => u.TwoFactorSecret).HasMaxLength(500);
         b.Property(u => u.TransactionPinHash).HasMaxLength(200);
+        b.Property(u => u.PhotoPath).HasMaxLength(300);
         b.Ignore(u => u.HasTransactionPin);
     }
 }

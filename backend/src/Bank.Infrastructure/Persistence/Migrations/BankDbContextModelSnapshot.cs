@@ -2006,6 +2006,11 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
+                    b.Property<string>("PhotoPath")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("photo_path");
+
                     b.Property<DateTime?>("PinLockoutEndsAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("pin_lockout_ends_at");

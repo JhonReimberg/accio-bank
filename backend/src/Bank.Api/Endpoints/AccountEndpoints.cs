@@ -15,6 +15,26 @@ public static class AccountEndpoints
         g.MapGet("/statement/{transactionId:guid}/receipt", async (Guid transactionId, StatementService statement, CancellationToken ct) =>
             TypedResults.File(await statement.GetReceiptPdfAsync(transactionId, ct), "application/pdf", $"comprovante-{transactionId}.pdf"));
 
+        g.MapGet("/photo", async (ProfilePhotoService photos, CancellationToken ct) =>
+        {
+            var file = await photos.OpenAsync(ct);
+            return TypedResults.File(file.Content, file.ContentType);
+        });
+        g.MapPut("/photo", async (IFormFile file, ProfilePhotoService photos, CancellationToken ct) =>
+            {
+                await using var stream = file.OpenReadStream();
+                await photos.SaveAsync(stream, file.Length, ct);
+                return TypedResults.NoContent();
+            })
+            // Bearer-token API (no auth cookie on this route), so there is no CSRF vector to protect.
+            .DisableAntiforgery()
+            .RequireRateLimiting(RateLimits.Sensitive);
+        g.MapDelete("/photo", async (ProfilePhotoService photos, CancellationToken ct) =>
+        {
+            await photos.RemoveAsync(ct);
+            return TypedResults.NoContent();
+        });
+
         g.MapPost("/deposits", async (DepositRequest req, AccountService accounts, CancellationToken ct) =>
                 TypedResults.Ok(await accounts.DepositAsync(req, ct)))
             .RequireIdempotency()

@@ -13,7 +13,7 @@ namespace Bank.Application.Accounts;
 
 public record AccountResponse(
     string Name, string Email, string Number, AccountStatus Status, AccountTier Tier,
-    decimal AvailableBalance, decimal BlockedBalance, decimal TotalBalance);
+    decimal AvailableBalance, decimal BlockedBalance, decimal TotalBalance, bool HasPhoto);
 
 public record DepositRequest(decimal Amount);
 
@@ -55,7 +55,7 @@ public class AccountService(
                 join u in db.Users on a.UserId equals u.Id
                 where a.UserId == userId
                 select new AccountResponse(
-                    u.Name, u.Email, a.Number.ToString(), a.Status, a.Tier, a.Balance - a.BlockedBalance, a.BlockedBalance, a.Balance))
+                    u.Name, u.Email, a.Number.ToString(), a.Status, a.Tier, a.Balance - a.BlockedBalance, a.BlockedBalance, a.Balance, u.PhotoPath != null))
             .SingleOrDefaultAsync(ct) ?? throw new UnauthorizedException("Conta não encontrada.");
     }
 

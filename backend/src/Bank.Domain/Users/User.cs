@@ -39,6 +39,11 @@ public class User : Entity
     public int FailedPinAttempts { get; private set; }
     public DateTime? PinLockoutEndsAt { get; private set; }
 
+    /// <summary>Where the profile photo is stored (file storage path), if the user set one.</summary>
+    public string? PhotoPath { get; private set; }
+
+    public void SetPhoto(string? path) => PhotoPath = path;
+
     public static User Create(string name, string email, DateTime now, Role role = Role.Customer) => new()
     {
         Name = name.Trim(),

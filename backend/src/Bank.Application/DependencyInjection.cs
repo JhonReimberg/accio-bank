@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<SecurityService>();
         services.AddScoped<TransactionAuthorizer>();
         services.AddScoped<AccountService>();
+        services.AddScoped<ProfilePhotoService>();
         services.AddScoped<StatementService>();
         services.AddScoped<NotificationService>();
         services.AddScoped<AdminService>();
