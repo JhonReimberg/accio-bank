@@ -320,6 +320,254 @@ namespace Bank.Infrastructure.Persistence.Migrations
                     b.ToTable("audit_logs", (string)null);
                 });
 
+            modelBuilder.Entity("Bank.Domain.Cards.Card", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("ExpiryMonth")
+                        .HasColumnType("integer")
+                        .HasColumnName("expiry_month");
+
+                    b.Property<int>("ExpiryYear")
+                        .HasColumnType("integer")
+                        .HasColumnName("expiry_year");
+
+                    b.Property<string>("Form")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("form");
+
+                    b.Property<string>("Function")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("function");
+
+                    b.Property<string>("HolderName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("holder_name");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(19)
+                        .HasColumnType("character varying(19)")
+                        .HasColumnName("number");
+
+                    b.Property<bool>("OnlinePurchasesEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("online_purchases_enabled");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cards");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_cards_account_id");
+
+                    b.HasIndex("Number")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cards_number");
+
+                    b.ToTable("cards", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Cards.CardPurchase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<bool>("Approved")
+                        .HasColumnType("boolean")
+                        .HasColumnName("approved");
+
+                    b.Property<Guid>("CardId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("card_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DeclineReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("decline_reason");
+
+                    b.Property<int>("Installments")
+                        .HasColumnType("integer")
+                        .HasColumnName("installments");
+
+                    b.Property<string>("Merchant")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("merchant");
+
+                    b.Property<bool>("Online")
+                        .HasColumnType("boolean")
+                        .HasColumnName("online");
+
+                    b.Property<decimal>("RoundUp")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("round_up");
+
+                    b.HasKey("Id")
+                        .HasName("pk_card_purchases");
+
+                    b.HasIndex("AccountId", "CreatedAt")
+                        .HasDatabaseName("ix_card_purchases_account_id_created_at");
+
+                    b.ToTable("card_purchases", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Cards.CreditLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<int>("DueDay")
+                        .HasColumnType("integer")
+                        .HasColumnName("due_day");
+
+                    b.Property<decimal>("Limit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("limit");
+
+                    b.Property<decimal>("Used")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("used");
+
+                    b.HasKey("Id")
+                        .HasName("pk_credit_lines");
+
+                    b.HasIndex("AccountId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_credit_lines_account_id");
+
+                    b.ToTable("credit_lines", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_credit_lines_used_within_limit_or_charges", "used >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Bank.Domain.Cards.Invoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly>("ClosingDate")
+                        .HasColumnType("date")
+                        .HasColumnName("closing_date");
+
+                    b.Property<Guid>("CreditLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("credit_line_id");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<decimal>("PaidAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("paid_amount");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_invoice");
+
+                    b.HasIndex("CreditLineId", "DueDate")
+                        .IsUnique()
+                        .HasDatabaseName("ix_invoice_credit_line_id_due_date");
+
+                    b.HasIndex("Status", "ClosingDate")
+                        .HasDatabaseName("ix_invoice_status_closing_date");
+
+                    b.ToTable("invoice", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Cards.InvoiceItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("description");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("invoice_id");
+
+                    b.Property<Guid?>("PurchaseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("purchase_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_invoice_item");
+
+                    b.HasIndex("InvoiceId")
+                        .HasDatabaseName("ix_invoice_item_invoice_id");
+
+                    b.ToTable("invoice_item", (string)null);
+                });
+
             modelBuilder.Entity("Bank.Domain.Credit.CreditPolicy", b =>
                 {
                     b.Property<int>("Id")
@@ -1646,6 +1894,46 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_balance_holds_accounts_account_id");
                 });
 
+            modelBuilder.Entity("Bank.Domain.Cards.Card", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_cards_accounts_account_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Cards.CreditLine", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithOne()
+                        .HasForeignKey("Bank.Domain.Cards.CreditLine", "AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_credit_lines_accounts_account_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Cards.Invoice", b =>
+                {
+                    b.HasOne("Bank.Domain.Cards.CreditLine", null)
+                        .WithMany("Invoices")
+                        .HasForeignKey("CreditLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_invoice_credit_lines_credit_line_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Cards.InvoiceItem", b =>
+                {
+                    b.HasOne("Bank.Domain.Cards.Invoice", null)
+                        .WithMany("Items")
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_invoice_item_invoice_invoice_id");
+                });
+
             modelBuilder.Entity("Bank.Domain.Credit.CreditPolicy", b =>
                 {
                     b.OwnsMany("Bank.Domain.Credit.ScoreBand", "Bands", b1 =>
@@ -1920,6 +2208,16 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_refresh_tokens_users_user_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Cards.CreditLine", b =>
+                {
+                    b.Navigation("Invoices");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Cards.Invoice", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Bank.Domain.Credit.Loan", b =>

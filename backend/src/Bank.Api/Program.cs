@@ -58,6 +58,7 @@ app.MapAccountEndpoints();
 app.MapPixEndpoints();
 app.MapCreditEndpoints();
 app.MapInvestmentEndpoints();
+app.MapCardEndpoints();
 app.MapOnboardingEndpoints();
 app.MapSecurityEndpoints();
 app.MapNotificationEndpoints();
@@ -85,6 +86,7 @@ if (Bank.Infrastructure.DependencyInjection.JobsEnabled(app.Configuration))
     jobs.AddOrUpdate<RecalculateScoresJob>("recalculate-scores", j => j.RunAsync(CancellationToken.None), "0 2 * * *", brasilia);
     jobs.AddOrUpdate<LoanCollectionJob>("loan-collection", j => j.RunAsync(CancellationToken.None), "0 8 * * *", brasilia);
     jobs.AddOrUpdate<Bank.Application.Investments.AccrueInvestmentYieldJob>("investment-yield", j => j.RunAsync(CancellationToken.None), "0 1 * * 2-6", brasilia);
+    jobs.AddOrUpdate<Bank.Application.Cards.CardInvoiceJob>("card-invoices", j => j.RunAsync(CancellationToken.None), "30 0 * * *", brasilia);
     jobs.AddOrUpdate<OverdraftInterestJob>("overdraft-interest", j => j.RunAsync(CancellationToken.None), "55 23 * * *", brasilia);
 }
 

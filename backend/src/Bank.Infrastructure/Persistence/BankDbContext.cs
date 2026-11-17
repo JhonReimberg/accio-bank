@@ -42,6 +42,9 @@ public class BankDbContext(DbContextOptions<BankDbContext> options, TimeProvider
     public DbSet<Loan> Loans => Set<Loan>();
     public DbSet<LoanInstallment> LoanInstallments => Set<LoanInstallment>();
     public DbSet<Domain.Investments.Investment> Investments => Set<Domain.Investments.Investment>();
+    public DbSet<Domain.Cards.Card> Cards => Set<Domain.Cards.Card>();
+    public DbSet<Domain.Cards.CreditLine> CreditLines => Set<Domain.Cards.CreditLine>();
+    public DbSet<Domain.Cards.CardPurchase> CardPurchases => Set<Domain.Cards.CardPurchase>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();

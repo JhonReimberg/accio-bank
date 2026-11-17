@@ -33,6 +33,9 @@ public interface IBankDbContext
     DbSet<Loan> Loans { get; }
     DbSet<LoanInstallment> LoanInstallments { get; }
     DbSet<Investment> Investments { get; }
+    DbSet<Domain.Cards.Card> Cards { get; }
+    DbSet<Domain.Cards.CreditLine> CreditLines { get; }
+    DbSet<Domain.Cards.CardPurchase> CardPurchases { get; }
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<Notification> Notifications { get; }
 
