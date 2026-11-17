@@ -9,6 +9,9 @@ export function setAccessToken(token: string | null) {
   accessToken = token
 }
 
+/** For the real-time hub (WebSockets send it in the query string). */
+export const getAccessToken = () => accessToken
+
 export function onUnauthorized(handler: () => void) {
   onSessionLost = handler
 }

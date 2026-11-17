@@ -99,6 +99,7 @@ public class Loan : Entity
     {
         if (installment.LoanId != Id) throw new InvalidOperationException("Installment of another loan.");
         installment.Pay(charge, transactionId, today, now);
+        Raise(new LoanInstallmentPaid(Id, UserId, installment.Number, charge.Total));
         if (_installments.All(i => i.Status == InstallmentStatus.Paid))
         {
             Status = LoanStatus.PaidOff;
@@ -178,5 +179,7 @@ public class LoanInstallment : Entity
 }
 
 public sealed record LoanInstallmentOverdue(Guid LoanId, Guid UserId, int Number, decimal Amount, DateOnly DueDate) : IDomainEvent;
+
+public sealed record LoanInstallmentPaid(Guid LoanId, Guid UserId, int Number, decimal Amount) : IDomainEvent;
 
 public sealed record LoanPaidOff(Guid LoanId, Guid UserId) : IDomainEvent;

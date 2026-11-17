@@ -77,6 +77,12 @@ public interface IFileStorage
     Task<Stream> OpenReadAsync(string path, CancellationToken ct);
 }
 
+/// <summary>Pushes a notification to the user's open sessions (best effort: the notification center is the source of truth).</summary>
+public interface IRealtimeNotifier
+{
+    Task NotifyAsync(Guid userId, Guid notificationId, string title, string body, CancellationToken ct);
+}
+
 public interface IEmailSender
 {
     Task SendAsync(string to, string subject, string body, CancellationToken ct);

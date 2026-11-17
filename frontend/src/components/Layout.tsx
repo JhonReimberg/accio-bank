@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router'
 import { useAuth } from '../lib/useAuth'
 import { useUnreadCount } from '../lib/queries'
+import { useRealtimeNotifications } from '../lib/realtime'
 
 const links = [
   { to: '/', label: 'Início', icon: '⌂' },
@@ -13,6 +14,7 @@ const links = [
 export default function Layout() {
   const { logout } = useAuth()
   const unread = useUnreadCount().data?.count ?? 0
+  const { toast, dismiss } = useRealtimeNotifications()
 
   return (
     <div className="app">
@@ -41,6 +43,18 @@ export default function Layout() {
       <main className="content">
         <Outlet />
       </main>
+
+      {toast && (
+        <div className="toast" role="status" aria-live="polite">
+          <div>
+            <strong>{toast.title}</strong>
+            <p>{toast.body}</p>
+          </div>
+          <button className="btn btn-ghost" onClick={dismiss} aria-label="Fechar aviso">
+            ×
+          </button>
+        </div>
+      )}
 
       <nav className="tabbar tabbar-5" aria-label="Principal">
         {links.map((l) => (

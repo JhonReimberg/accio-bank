@@ -95,6 +95,16 @@ public class LoanInstallmentOverdueHandler(IBankDbContext db, IEmailSender email
     }
 }
 
+public class LoanInstallmentPaidHandler(IBankDbContext db, TimeProvider clock) : IDomainEventHandler<LoanInstallmentPaid>
+{
+    public async Task HandleAsync(LoanInstallmentPaid e, CancellationToken ct)
+    {
+        db.Notifications.Add(Notification.Create(e.UserId, "Parcela debitada",
+            $"A parcela {e.Number} do seu empréstimo ({Formatting.Brl(e.Amount)}) foi paga.", clock.GetUtcNow().UtcDateTime));
+        await db.SaveChangesAsync(ct);
+    }
+}
+
 public class LoanPaidOffHandler(IBankDbContext db, TimeProvider clock) : IDomainEventHandler<LoanPaidOff>
 {
     public async Task HandleAsync(LoanPaidOff e, CancellationToken ct)

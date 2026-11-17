@@ -42,6 +42,16 @@ internal static class ApiSetup
                     RoleClaimType = ClaimNames.Role,
                     ClockSkew = TimeSpan.FromSeconds(30),
                 };
+                // WebSockets cannot send headers: the hub receives the access token in the query string.
+                o.Events = new()
+                {
+                    OnMessageReceived = ctx =>
+                    {
+                        if (ctx.Request.Path.StartsWithSegments("/api/hubs") && ctx.Request.Query["access_token"] is { Count: > 0 } token)
+                            ctx.Token = token;
+                        return Task.CompletedTask;
+                    },
+                };
             });
         services.AddAuthorizationBuilder()
             .AddPolicy(Policies.Backoffice, p => p.RequireRole("Analyst", "Admin"))

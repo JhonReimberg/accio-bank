@@ -33,6 +33,9 @@ builder.Services.AddApiRateLimiting(builder.Configuration.GetSection("RateLimiti
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddApiDocs();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, SubjectUserIdProvider>();
+builder.Services.AddSingleton<Bank.Application.Abstractions.IRealtimeNotifier, SignalRNotifier>();
 var behindProxy = builder.Configuration.GetValue("ForwardedHeaders:Enabled", false);
 if (behindProxy) builder.Services.AddTrustedProxy();
 
@@ -64,6 +67,7 @@ app.MapOnboardingEndpoints();
 app.MapSecurityEndpoints();
 app.MapNotificationEndpoints();
 app.MapAdminEndpoints();
+app.MapHub<NotificationHub>("/api/hubs/notifications");
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready") });
 
