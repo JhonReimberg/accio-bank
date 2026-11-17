@@ -41,6 +41,8 @@ Um banco digital com regras de negócio reais: **ledger de partidas dobradas**, 
 | Início (desktop) | Entrar |
 | --- | --- |
 | ![Início no desktop](docs/screenshots/home.png) | ![Tela de login com a coruja](docs/screenshots/login.png) |
+| **Empréstimo: o que falta para liberar** | **Notificação em tempo real (SignalR)** |
+| ![Requisitos do empréstimo](docs/screenshots/credito-bloqueado.png) | ![Aviso de PIX recebido na hora](docs/screenshots/notificacao-tempo-real.png) |
 | **Simulação de empréstimo (Price, IOF, CET)** | **Fatura do cartão** |
 | ![Simulação](docs/screenshots/credito-simulacao.png) | ![Fatura](docs/screenshots/fatura.png) |
 | **Receber com QR Code** | **Design system** |
