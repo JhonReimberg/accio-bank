@@ -6,6 +6,7 @@ const links = [
   { to: '/', label: 'Início', icon: '⌂' },
   { to: '/pix', label: 'PIX', icon: '◈' },
   { to: '/extrato', label: 'Extrato', icon: '≡' },
+  { to: '/credito', label: 'Crédito', icon: '$' },
   { to: '/seguranca', label: 'Segurança', icon: '⚿' },
 ]
 
@@ -41,7 +42,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <nav className="tabbar" aria-label="Principal">
+      <nav className="tabbar tabbar-5" aria-label="Principal">
         {links.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.to === '/'} className="tab">
             <span aria-hidden>{l.icon}</span>

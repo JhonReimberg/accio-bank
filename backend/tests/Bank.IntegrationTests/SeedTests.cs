@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using Bank.Application.Accounts;
 using Bank.Application.Common;
+using Bank.Application.Credit;
 using Bank.Application.Ledger;
 using Bank.Domain.Accounts;
 using Bank.Infrastructure.Persistence.Seeding;
@@ -27,7 +28,16 @@ public class SeedTests(BankApiFactory factory)
             Assert.True(report.IsBalanced);
         }
 
+        // The three credit situations the seed promises.
+        var eduardo = await TestUsers.LoginAsync(factory, "eduardo@vela.dev", password: DemoDataSeeder.Password);
+        var eduardoCredit = (await eduardo.GetFromJsonAsync<EligibilityResponse>("/api/credit/eligibility"))!;
+        Assert.False(eduardoCredit.Rules.Single(r => r.Code == "no_overdue").Passed);
+        var diego = await TestUsers.LoginAsync(factory, "diego@vela.dev", password: DemoDataSeeder.Password);
+        Assert.False((await diego.GetFromJsonAsync<EligibilityResponse>("/api/credit/eligibility"))!.Rules.Single(r => r.Code == "account_age").Passed);
+
         var carla = await TestUsers.LoginAsync(factory, "carla@vela.dev", password: DemoDataSeeder.Password);
+        var carlaCredit = (await carla.GetFromJsonAsync<EligibilityResponse>("/api/credit/eligibility"))!;
+        Assert.True(carlaCredit.Eligible, string.Join("; ", carlaCredit.Rules.Where(r => !r.Passed).Select(r => r.Message)));
         var account = await carla.AccountAsync();
         Assert.Equal((AccountStatus.Active, AccountTier.Plus), (account.Status, account.Tier));
 

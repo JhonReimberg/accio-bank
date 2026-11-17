@@ -1,5 +1,6 @@
 using Bank.Application.Abstractions;
 using Bank.Domain.Accounts;
+using Bank.Domain.Credit;
 using Bank.Domain.Customers;
 using Bank.Domain.Ledger;
 using Bank.Domain.Pix;
@@ -37,7 +38,7 @@ public class DemoDataSeeder(BankDbContext db, ISecretHasher hasher, IFileStorage
         var carla = CreateCustomer("Carla", "carla@vela.dev", "Carla Mendes de Souza", 12_000, "Engenheira de dados", daysAgo: 120, "+5511987650001");
         // Blocked by account age: opened 10 days ago.
         var diego = CreateCustomer("Diego", "diego@vela.dev", "Diego Rocha Alves", 3_200, "Vendedor", daysAgo: 10, "+5521987650002");
-        // Will be the delinquent customer once loans exist (phase 2): old account, low balance.
+        // Delinquent: took a loan 75 days ago, paid the 1st installment, the 2nd is overdue.
         var eduardo = CreateCustomer("Eduardo", "eduardo@vela.dev", "Eduardo Lima Pereira", 2_100, "Motorista", daysAgo: 300, "+5531987650003");
         // Submitted and waiting in the KYC queue (visible when auto-approval is off).
         CreateCustomer("Fernanda", "fernanda@vela.dev", "Fernanda Alves Costa", 6_500, "Advogada", daysAgo: 1, "+5541987650004", approve: false);
@@ -64,10 +65,42 @@ public class DemoDataSeeder(BankDbContext db, ISecretHasher hasher, IFileStorage
             (2, d => Pix(carla, diego, 1_250, "Aluguel da casa de praia", d)),
         };
         for (var month = 3; month >= 0; month--) history.Add((month * 30 + 5, d => Deposit(cash, carla, 6_200, d)));
+
+        // Eduardo's loan: disbursed, mostly spent on a PIX the next day, 1st installment paid on its due date.
+        var today = DateOnly.FromDateTime(Application.Common.BankTime.ToLocal(_now));
+        var portfolio = await db.Accounts.SingleAsync(a => a.Id == SystemAccounts.LoanPortfolio, ct);
+        var revenue = await db.Accounts.SingleAsync(a => a.Id == SystemAccounts.CreditRevenue, ct);
+        var iofPayable = await db.Accounts.SingleAsync(a => a.Id == SystemAccounts.IofPayable, ct);
+        var quote = LoanMath.Quote(1_200, 6, 0.069m, today.AddDays(-75), new IofRates());
+        Loan? loan = null;
+        history.Add((75, d =>
+        {
+            var tx = LedgerTransaction.Post(TransactionKind.LoanDisbursement, At(d),
+                new Posting(portfolio, EntryDirection.Debit, quote.RequestedAmount, "Empréstimo concedido"),
+                new Posting(eduardo.Account, EntryDirection.Credit, quote.NetAmount, "Empréstimo pessoal (6x)"),
+                new Posting(iofPayable, EntryDirection.Credit, quote.Iof, "IOF sobre empréstimo"));
+            Post(tx);
+            loan = Loan.Contract(eduardo.Account.Id, eduardo.User.Id, quote, 520, tx.Id, tx.CreatedAt);
+            db.Loans.Add(loan);
+        }));
+        history.Add((74, d => Pix(eduardo, carla, 1_000, "Devolução do empréstimo da Carla", d)));
+        var firstDue = quote.Schedule[0].DueDate;
+        history.Add((today.DayNumber - firstDue.DayNumber, d =>
+        {
+            var installment = loan!.Installment(1);
+            var charge = installment.ChargeOn(firstDue, loan.MonthlyRate, 0.02m, 0.00033m);
+            var tx = LedgerTransaction.Post(TransactionKind.LoanPayment, At(d),
+                new Posting(eduardo.Account, EntryDirection.Debit, charge.Total, "Parcela 1/6 do empréstimo"),
+                new Posting(portfolio, EntryDirection.Credit, charge.Principal, "Amortização de empréstimo"),
+                new Posting(revenue, EntryDirection.Credit, charge.Revenue, "Juros e encargos de empréstimo"));
+            Post(tx);
+            loan.RegisterPayment(installment, charge, tx.Id, firstDue, tx.CreatedAt);
+        }));
+
         // Posted oldest first: running balances (BalanceAfter) depend on the order.
         foreach (var (daysAgo, post) in history.OrderByDescending(h => h.DaysAgo)) post(daysAgo);
-
-        var today = DateOnly.FromDateTime(Application.Common.BankTime.ToLocal(_now));
+        // The 2nd installment is past due and his balance is short of it: overdue (raises the "Parcela em atraso" alert).
+        loan!.MarkOverdue(today);
         db.PixSchedules.Add(PixSchedule.Create(carla.Account.Id, PixKeyType.Phone, "+5521987650002", 150, "Mesada",
             ScheduleFrequency.Monthly, today.AddDays(5), null, today, _now));
 

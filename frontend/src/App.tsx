@@ -1,6 +1,15 @@
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router'
 import Layout from './components/Layout'
-import { Button, Card, ErrorBox, Loading } from './components/ui'
+import { ErrorBox, Loading } from './components/ui'
+import AuditPage from './pages/backoffice/AuditPage'
+import BackofficeLayout from './pages/backoffice/BackofficeLayout'
+import { CustomerPage, CustomersPage } from './pages/backoffice/CustomersPage'
+import DashboardPage from './pages/backoffice/DashboardPage'
+import KycQueuePage from './pages/backoffice/KycQueuePage'
+import PolicyPage from './pages/backoffice/PolicyPage'
+import CreditPage from './pages/credit/CreditPage'
+import LoansPage from './pages/credit/LoansPage'
+import OverdraftPage from './pages/credit/OverdraftPage'
 import { useAuth } from './lib/useAuth'
 import { useOnboarding } from './lib/queries'
 import { LoginPage, RegisterPage } from './pages/AuthPages'
@@ -24,24 +33,17 @@ function PublicOnly() {
 }
 
 function SignedIn() {
-  const { state, logout } = useAuth()
+  const { state } = useAuth()
   if (state.status === 'loading') return <Loading />
   if (state.status === 'anonymous') return <Navigate to="/entrar" replace />
-  if (state.session.role !== 'Customer')
-    return (
-      <main className="auth-shell">
-        <Card className="stack center">
-          <h1>Olá, {state.session.name}</h1>
-          <p className="muted">
-            Você entrou com um perfil de back-office ({state.session.role}). As telas de back-office chegam na Fase 2; por enquanto use a
-            API documentada em /scalar/v1.
-          </p>
-          <Button variant="ghost" onClick={logout}>
-            Sair
-          </Button>
-        </Card>
-      </main>
-    )
+  return <Outlet />
+}
+
+/** Analysts and admins work in the back-office; customers in the banking app. Each is sent to its own area. */
+function RoleArea({ staff }: { staff: boolean }) {
+  const { state } = useAuth()
+  const isStaff = state.status === 'authenticated' && state.session.role !== 'Customer'
+  if (isStaff !== staff) return <Navigate to={isStaff ? '/backoffice' : '/'} replace />
   return <Outlet />
 }
 
@@ -64,6 +66,17 @@ export default function App() {
           <Route path="/abrir-conta" element={<RegisterPage />} />
         </Route>
         <Route element={<SignedIn />}>
+          <Route element={<RoleArea staff />}>
+            <Route path="/backoffice" element={<BackofficeLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="kyc" element={<KycQueuePage />} />
+              <Route path="clientes" element={<CustomersPage />} />
+              <Route path="clientes/:userId" element={<CustomerPage />} />
+              <Route path="auditoria" element={<AuditPage />} />
+              <Route path="politica" element={<PolicyPage />} />
+            </Route>
+          </Route>
+          <Route element={<RoleArea staff={false} />}>
           <Route path="/cadastro" element={<OnboardingPage />} />
           <Route element={<ActiveAccount />}>
             <Route element={<Layout />}>
@@ -78,7 +91,11 @@ export default function App() {
               <Route path="pix/limites" element={<PixLimitsPage />} />
               <Route path="seguranca" element={<SecurityPage />} />
               <Route path="notificacoes" element={<NotificationsPage />} />
+              <Route path="credito" element={<CreditPage />} />
+              <Route path="credito/emprestimos" element={<LoansPage />} />
+              <Route path="credito/cheque-especial" element={<OverdraftPage />} />
             </Route>
+          </Route>
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

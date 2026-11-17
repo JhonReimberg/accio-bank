@@ -54,4 +54,12 @@ export const kindLabel: Record<string, string> = {
   InternalTransfer: 'Transferência',
   Pix: 'PIX',
   PixRefund: 'Devolução de PIX',
+  LoanDisbursement: 'Empréstimo',
+  LoanPayment: 'Parcela de empréstimo',
+  OverdraftInterest: 'Juros do cheque especial',
 }
+
+const percentFormat = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 })
+
+/** 0.045 → "4,5%". */
+export const percent = (ratio: number) => percentFormat.format(ratio)

@@ -9,11 +9,13 @@
 
 > **Projeto fictício, feito para portfólio.** "Vela" não é uma instituição real e não tem relação com nenhum banco. Os CPFs, chaves e documentos usados são gerados para teste.
 
-Um banco digital com regras de negócio reais: **ledger de partidas dobradas**, **controle de concorrência**, **idempotência**, **PIX** (chaves, QR Code, copia e cola, devolução, agendamento e limites noturnos), **onboarding com KYC**, **2FA** e **senha transacional**. A Fase 1 está pronta; crédito e cartões vêm nas próximas fases ([roadmap](#roadmap)).
+Um banco digital com regras de negócio reais: **ledger de partidas dobradas**, **controle de concorrência**, **idempotência**, **PIX** (chaves, QR Code, copia e cola, devolução, agendamento e limites noturnos), **onboarding com KYC**, **2FA**, **senha transacional** e **crédito** (score explicável, motor de elegibilidade, empréstimo pela Tabela Price, cheque especial e back-office). As Fases 1 e 2 estão prontas; cartões e investimentos vêm na Fase 3 ([roadmap](#roadmap)).
 
 | Início (desktop) | PIX no celular | Receber com QR Code |
 | --- | --- | --- |
 | ![Início](docs/screenshots/home.png) | ![Pagar com PIX](docs/screenshots/pix-pagar-mobile.png) | ![QR Code PIX](docs/screenshots/pix-receber.png) |
+| **Crédito: o que falta** | **Simulação (Price, IOF, CET)** | **Back-office** |
+| ![Requisitos do empréstimo](docs/screenshots/credito-bloqueado.png) | ![Simulação](docs/screenshots/credito-simulacao.png) | ![Painel do back-office](docs/screenshots/backoffice-painel.png) |
 
 ## Rodar com um comando
 
@@ -37,9 +39,9 @@ Senha de todos: `Vela@demo123` · senha transacional: `2580`
 
 | Usuário | Situação |
 | --- | --- |
-| `carla@vela.dev` | Cliente Plus com 4 meses de conta e movimentação recente: será **elegível ao crédito** na Fase 2 |
-| `diego@vela.dev` | Conta aberta há 10 dias: será **bloqueado por tempo de conta** no motor de elegibilidade |
-| `eduardo@vela.dev` | Conta antiga com saldo baixo: será o **inadimplente** quando o módulo de crédito existir |
+| `carla@vela.dev` | Cliente Plus com 4 meses de conta e movimentação recente: **elegível ao crédito** (oferta pré-aprovada) |
+| `diego@vela.dev` | Conta aberta há 10 dias: **bloqueado por tempo de conta** (vê "faltam X dias" e o progresso) |
+| `eduardo@vela.dev` | Pegou um empréstimo, pagou a 1ª parcela e está com a 2ª **em atraso** (multa + mora) |
 | `fernanda@vela.dev` | Cadastro **aguardando análise** na fila de KYC |
 | `analista@vela.dev` | Perfil **Analyst** (fila de KYC, bloqueios, auditoria) |
 | `admin@vela.dev` | Perfil **Admin** (tudo do analista + conciliação do ledger) |
@@ -59,7 +61,26 @@ Também dá para abrir uma conta nova pelo app. No modo demo, a análise de KYC 
   - agendado e recorrente (executado por job);
   - limite diurno e noturno: aumento só vale depois de 24 h, redução vale na hora;
   - contatos favoritos.
-- **Back-office (API):** fila de KYC, bloqueio de conta e de saldo, log de auditoria pesquisável e relatório de conciliação do ledger. As telas de back-office chegam na Fase 2.
+- **Back-office (API):** fila de KYC, bloqueio de conta e de saldo, log de auditoria pesquisável e relatório de conciliação do ledger.
+
+## Funcionalidades (Fase 2: crédito)
+
+- **Score interno de 0 a 1000**, explicável: cada ponto vem de um fator com nome (tempo de conta, movimentação, renda, parcelas pagas em dia ou com atraso, uso do cheque especial). Ele é recalculado todo dia por job e guarda histórico.
+- **Motor de elegibilidade:** em vez de só negar, mostra o que falta (✅/⏳/❌ com barra de progresso). Cada regra é uma classe com testes; os parâmetros são editáveis pelo Admin.
+- **Empréstimo pessoal:**
+  - oferta pré-aprovada pela faixa de score;
+  - simulador com parcela, juros, IOF e CET, e tabela de amortização Price completa;
+  - contratação com senha transacional + `Idempotency-Key`, creditada via ledger;
+  - débito automático no vencimento, atraso com multa de 2% e mora diária;
+  - antecipação com desconto dos juros;
+  - contrato em PDF.
+- **Cheque especial:** limite pela faixa de score, saldo negativo garantido também por constraint no banco, juros diários cobrados por job (teto de 8% a.m.).
+- **Back-office (telas):**
+  - painel com volume de PIX, carteira de crédito, inadimplência e status do ledger;
+  - fila de KYC com visualização dos documentos;
+  - visão 360° do cliente: bloquear e desbloquear, ajustar limite com motivo;
+  - log de auditoria pesquisável;
+  - política de crédito (taxas por faixa, regras, CDI), com edição restrita ao Admin.
 
 ## Arquitetura
 
@@ -126,7 +147,15 @@ PIX, devoluções, agendamentos, transferências e depósitos exigem o header `I
 Eventos de domínio ("dinheiro recebido", "acesso em novo dispositivo", "PIX agendado falhou", "KYC aprovado") são gravados na tabela `outbox_messages` **na mesma transação** da mudança: só existem se ela for confirmada. Um processador em background lê com `FOR UPDATE SKIP LOCKED`, por isso pode rodar em várias instâncias, e executa os handlers (notificações no app e e-mail simulado) na mesma transação que marca a mensagem como processada.
 
 ### Motor de elegibilidade de crédito
-Previsto para a Fase 2: uma lista de regras (`IEligibilityRule`) que mostra ao cliente o que falta, em vez de só negar. O seed já cria clientes nas situações que ele vai avaliar.
+Cada requisito é uma implementação de `IEligibilityRule`: conta ativa, tempo de conta, movimentação em 30 dias, nada em atraso, score mínimo e comprometimento de renda. Cada uma devolve `RuleResult(Code, Passed, Message, Progress)`. As regras compartilham um perfil carregado uma vez por requisição. Os limites vêm da `CreditPolicy`, que o Admin edita no back-office, então mudar "60 dias de conta" para "30" não exige deploy. A oferta (taxa, valor pré-aprovado, limite de cheque especial) depende da **faixa de score**, e o sistema garante que um score maior nunca pague taxa maior.
+
+### Matemática do crédito
+- **Tabela Price:** `PMT = PV × i / (1 − (1 + i)^−n)`. Os juros de cada mês são arredondados ao centavo (arredondamento bancário) e a última parcela absorve a diferença, para a soma das amortizações bater exatamente com o valor emprestado.
+- **IOF simplificado:** 0,38% fixo mais 0,0082% ao dia sobre a amortização de cada parcela, limitado a 365 dias.
+- **CET:** a taxa que iguala o valor efetivamente recebido às parcelas, calculada por bisseção. É mensal e anualizada.
+- **Atraso:** multa de 2% (teto do CDC) mais mora diária, aplicadas no pagamento.
+- **Antecipação:** desconto pelo valor presente na taxa do contrato, limitado aos juros daquela parcela, para que o principal seja sempre quitado e o ledger continue fechando.
+- **Contabilidade:** a contratação é um lançamento em várias pontas (carteira de crédito → cliente + IOF a recolher); a parcela também (cliente → carteira + receitas de crédito).
 
 ### Outras escolhas
 - **Dinheiro em `decimal`** com arredondamento bancário explícito (`MidpointRounding.ToEven`), validado com no máximo 2 casas.
@@ -138,7 +167,7 @@ Previsto para a Fase 2: uma lista de regras (`IEligibilityRule`) que mostra ao c
 ## Testes e CI
 
 ```bash
-cd backend && dotnet test   # 93 unitários + 52 de integração
+cd backend && dotnet test   # 113 unitários + 58 de integração
 ```
 
 - **Unitários:** regras de domínio, como cálculo de CPF, BR Code e CRC16, períodos e carência de limites, agendamento mensal (31/01 → 28/02 → 31/03), devoluções e bloqueio de PIN.
@@ -171,8 +200,8 @@ frontend/src/
 ## Roadmap
 
 - [x] **Fase 1:** base sólida (conta, segurança, ledger, PIX)
-- [ ] **Fase 2:** crédito (motor de elegibilidade, score interno, empréstimo pela Tabela Price, cheque especial, back-office)
-- [ ] **Fase 3:** cartões, investimentos (CDB, caixinhas, IR regressivo), antifraude e notificações em tempo real (SignalR)
+- [x] **Fase 2:** crédito (motor de elegibilidade, score interno, empréstimo pela Tabela Price, cheque especial, back-office)
+- [ ] **Fase 3:** cartões, investimentos (CDB, caixinhas, IR regressivo), crédito com garantia de investimento, antifraude e notificações em tempo real (SignalR)
 
 ## Simplificações conscientes
 

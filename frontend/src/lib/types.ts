@@ -22,7 +22,7 @@ export type Account = {
   totalBalance: number
 }
 
-export type TransactionKind = 'Deposit' | 'InternalTransfer' | 'Pix' | 'PixRefund'
+export type TransactionKind = 'Deposit' | 'InternalTransfer' | 'Pix' | 'PixRefund' | 'LoanDisbursement' | 'LoanPayment' | 'OverdraftInterest'
 
 export type StatementItem = {
   transactionId: string
@@ -132,3 +132,185 @@ export type Device = {
 }
 
 export type LoginAttempt = { createdAt: string; succeeded: boolean; failureReason: string | null; ipAddress: string | null; device: string | null }
+
+// ---------- Credit (phase 2) ----------
+
+export type RuleResult = { code: string; passed: boolean; message: string; progress: number | null }
+
+export type LoanOffer = {
+  maxAmount: number
+  monthlyRate: number
+  minInstallments: number
+  maxInstallments: number
+  minAmount: number
+  maxInstallmentAmount: number
+}
+
+export type Eligibility = { eligible: boolean; score: number | null; rules: RuleResult[]; offer: LoanOffer | null }
+
+export type AmortizationRow = { number: number; dueDate: string; payment: number; interest: number; principal: number; balance: number }
+
+export type LoanQuote = {
+  requestedAmount: number
+  installments: number
+  monthlyRate: number
+  installmentAmount: number
+  iof: number
+  netAmount: number
+  totalInterest: number
+  totalPaid: number
+  cetMonthly: number
+  cetYearly: number
+  schedule: AmortizationRow[]
+}
+
+export type InstallmentStatus = 'Pending' | 'Overdue' | 'Paid'
+
+export type Installment = {
+  number: number
+  dueDate: string
+  amount: number
+  interest: number
+  principal: number
+  balanceAfter: number
+  status: InstallmentStatus
+  paidAmount: number | null
+  paidAt: string | null
+  amountDueToday: number | null
+}
+
+export type Loan = {
+  id: string
+  amount: number
+  netAmount: number
+  iof: number
+  monthlyRate: number
+  cetMonthly: number
+  cetYearly: number
+  installmentCount: number
+  installmentAmount: number
+  status: 'Active' | 'PaidOff'
+  outstandingPrincipal: number
+  contractedAt: string
+  installments: Installment[]
+}
+
+export type Overdraft = { limit: number; used: number; maxLimitOffered: number; monthlyRate: number }
+
+export type ScoreFactor = { code: string; description: string; points: number }
+
+export type Score = { score: number; factors: ScoreFactor[]; calculatedAt: string; history: { score: number; calculatedAt: string }[] }
+
+// ---------- Back-office ----------
+
+export type Dashboard = {
+  customers: number
+  activeAccounts: number
+  pendingKyc: number
+  pixVolume30Days: number
+  pixCount30Days: number
+  pixByDay: { day: string; amount: number; count: number }[]
+  creditPortfolio: number
+  activeLoans: number
+  overdueAmount: number
+  overdueInstallments: number
+  delinquencyRate: number
+  overdraftUsed: number
+  ledgerBalanced: boolean
+}
+
+export type CustomerListItem = {
+  userId: string
+  name: string
+  email: string
+  maskedCpf: string | null
+  accountStatus: AccountStatus | null
+  tier: AccountTier | null
+  kycStatus: KycStatus
+  score: number | null
+}
+
+export type Customer360 = {
+  userId: string
+  accountId: string | null
+  name: string
+  email: string
+  cpf: string | null
+  phone: string | null
+  birthDate: string | null
+  address: { cep: string; street: string; number: string; complement: string | null; neighborhood: string; city: string; state: string } | null
+  monthlyIncome: number | null
+  occupation: string | null
+  kycStatus: KycStatus
+  createdAt: string
+  account: {
+    number: string
+    status: AccountStatus
+    statusReason: string | null
+    tier: AccountTier
+    balance: number
+    blockedBalance: number
+    overdraftLimit: number
+    overdraftUsed: number
+    activatedAt: string | null
+  } | null
+  score: Score | null
+  loans: { id: string; amount: number; installmentCount: number; paidInstallments: number; overdueInstallments: number; outstandingPrincipal: number; status: string; contractedAt: string }[]
+  recentTransactions: { transactionId: string; kind: TransactionKind; amount: number; description: string; createdAt: string }[]
+}
+
+export type KycQueueItem = {
+  customerId: string
+  fullName: string | null
+  email: string
+  maskedCpf: string | null
+  monthlyIncome: number | null
+  submittedAt: string | null
+  status: KycStatus
+}
+
+export type KycDetail = {
+  customerId: string
+  fullName: string | null
+  email: string
+  cpf: string | null
+  birthDate: string | null
+  phone: string | null
+  address: Customer360['address']
+  monthlyIncome: number | null
+  occupation: string | null
+  status: KycStatus
+  rejectionReason: string | null
+  submittedAt: string | null
+  documents: { id: string; type: DocumentType; contentType: string; sizeBytes: number; uploadedAt: string }[]
+}
+
+export type AuditLog = {
+  id: string
+  actorUserId: string | null
+  action: string
+  entityType: string
+  entityId: string | null
+  before: string | null
+  after: string | null
+  ipAddress: string | null
+  createdAt: string
+}
+
+export type ScoreBand = { minScore: number; monthlyRate: number; preApprovedIncomeMultiplier: number; overdraftLimit: number }
+
+export type CreditPolicy = {
+  minAccountAgeDays: number
+  minMovement30Days: number
+  minScore: number
+  maxIncomeCommitment: number
+  minInstallments: number
+  maxInstallments: number
+  minLoanAmount: number
+  lateFeeRate: number
+  dailyLateInterestRate: number
+  overdraftMonthlyRate: number
+  cdiAnnualRate: number
+  bands: ScoreBand[]
+  updatedAt: string | null
+}
