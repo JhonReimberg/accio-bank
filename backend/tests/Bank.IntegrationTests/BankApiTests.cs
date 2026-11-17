@@ -1,11 +1,13 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Bank.Api.Endpoints;
+using Bank.Application.Accounts;
+using Bank.Application.Auth;
 
-namespace Bank.Api.Tests;
+namespace Bank.IntegrationTests;
 
-public class BankApiTests(BankApiFactory factory) : IClassFixture<BankApiFactory>
+[Collection(ApiCollection.Name)]
+public class BankApiTests(BankApiFactory factory)
 {
     record TestUser(HttpClient Client, string Email, string Number);
 

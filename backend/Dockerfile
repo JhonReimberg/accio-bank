@@ -1,5 +1,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
+# Restore first (cached layer): only build props and project files.
+COPY Directory.Build.props Directory.Packages.props ./
+COPY src/Bank.Domain/Bank.Domain.csproj src/Bank.Domain/
+COPY src/Bank.Application/Bank.Application.csproj src/Bank.Application/
+COPY src/Bank.Infrastructure/Bank.Infrastructure.csproj src/Bank.Infrastructure/
 COPY src/Bank.Api/Bank.Api.csproj src/Bank.Api/
 RUN dotnet restore src/Bank.Api/Bank.Api.csproj
 COPY src/ src/

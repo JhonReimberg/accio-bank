@@ -1,21 +1,19 @@
-using Bank.Api.Auth;
-using Bank.Api.Data;
 using Bank.Api.Endpoints;
+using Bank.Api.Infrastructure;
+using Bank.Application;
+using Bank.Application.Abstractions;
+using Bank.Infrastructure;
+using Bank.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
-    ?? throw new InvalidOperationException("Missing 'Jwt' configuration (Issuer, Key).");
-if (jwt.Key.Length < 32) throw new InvalidOperationException("Jwt:Key must have at least 32 characters.");
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddDbContext<BankDbContext>(o => o.UseNpgsql(builder.Configuration.GetConnectionString("Bank")));
-builder.Services.AddSingleton(jwt);
-builder.Services.AddSingleton<TokenService>();
-builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+var jwt = Bank.Infrastructure.DependencyInjection.GetJwtOptions(builder.Configuration);
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
@@ -29,8 +27,10 @@ builder.Services
         };
     });
 builder.Services.AddAuthorization();
-builder.Services.AddValidation();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -51,7 +51,7 @@ app.MapGet("/health", () => Results.Ok());
 
 // shortcut: migrates on startup, fine for one instance; run migrations in the deploy pipeline when scaling out.
 using (var scope = app.Services.CreateScope())
-    scope.ServiceProvider.GetRequiredService<BankDbContext>().Database.Migrate();
+    await scope.ServiceProvider.GetRequiredService<BankDbContext>().Database.MigrateAsync();
 
 app.Run();
 
