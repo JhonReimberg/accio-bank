@@ -1,21 +1,26 @@
 using Bank.Application.Abstractions;
 using Bank.Application.Common;
+using Bank.Application.Ledger;
 using Bank.Domain.Accounts;
-using Bank.Domain.Common;
+using Bank.Domain.Ledger;
 using Bank.Domain.Users;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bank.Application.Accounts;
 
-public record AccountResponse(string Name, string Email, string Number, decimal Balance);
+public record AccountResponse(
+    string Name, string Email, string Number, decimal AvailableBalance, decimal BlockedBalance, decimal TotalBalance);
 
-public record TransactionResponse(Guid Id, TransactionType Type, decimal Amount, string Description, DateTime CreatedAt);
+public record TransactionResponse(
+    Guid Id, TransactionKind Kind, decimal Amount, string Description, decimal BalanceAfter, DateTime CreatedAt);
 
 public record DepositRequest(decimal Amount);
 
 /// <param name="To">Account number or the recipient's e-mail.</param>
 public record TransferRequest(string To, decimal Amount);
+
+public record OperationResponse(Guid TransactionId);
 
 public class DepositRequestValidator : AbstractValidator<DepositRequest>
 {
@@ -34,7 +39,7 @@ public class TransferRequestValidator : AbstractValidator<TransferRequest>
 public class AccountService(
     IBankDbContext db,
     ICurrentUser currentUser,
-    TimeProvider clock,
+    LedgerPosting ledger,
     IValidator<DepositRequest> depositValidator,
     IValidator<TransferRequest> transferValidator)
 {
@@ -45,70 +50,75 @@ public class AccountService(
                 from a in db.Accounts
                 join u in db.Users on a.UserId equals u.Id
                 where a.UserId == userId
-                select new AccountResponse(u.Name, u.Email, a.Number.ToString(), a.Balance))
+                select new AccountResponse(
+                    u.Name, u.Email, a.Number.ToString(), a.Balance - a.BlockedBalance, a.BlockedBalance, a.Balance))
             .SingleOrDefaultAsync(ct) ?? throw new UnauthorizedException("Conta não encontrada.");
     }
 
     public async Task<IReadOnlyList<TransactionResponse>> GetTransactionsAsync(CancellationToken ct)
     {
-        var userId = currentUser.UserId;
+        var accountId = await MyAccountIdAsync(ct);
         // shortcut: fixed page of the latest 50, replaced by the filtered/paginated statement later in phase 1.
-        return await db.Transactions
-            .Where(t => db.Accounts.Any(a => a.Id == t.AccountId && a.UserId == userId))
-            .OrderByDescending(t => t.CreatedAt)
+        return await (
+                from e in db.LedgerEntries
+                join t in db.LedgerTransactions on e.TransactionId equals t.Id
+                where e.AccountId == accountId
+                orderby e.CreatedAt descending
+                select new TransactionResponse(
+                    t.Id, t.Kind, e.Direction == EntryDirection.Credit ? e.Amount : -e.Amount, e.Description, e.BalanceAfter, e.CreatedAt))
             .Take(50)
-            .Select(t => new TransactionResponse(t.Id, t.Type, t.Amount, t.Description, t.CreatedAt))
             .ToListAsync(ct);
     }
 
-    public async Task DepositAsync(DepositRequest request, CancellationToken ct)
+    public async Task<OperationResponse> DepositAsync(DepositRequest request, CancellationToken ct)
     {
         await depositValidator.ValidateAndThrowAsync(request, ct);
         var accountId = await MyAccountIdAsync(ct);
 
-        await using var tx = await db.BeginTransactionAsync(ct);
-        var account = (await db.LockAccountsAsync([accountId], ct)).Single();
-        account.Credit(request.Amount);
-        db.Transactions.Add(Transaction.Record(account.Id, TransactionType.Deposit, request.Amount, "Depósito", null, Now()));
-        await db.SaveChangesAsync(ct);
-        await tx.CommitAsync(ct);
+        // shortcut: every deposit locks the single cash account row; shard it if cash-in becomes a hot path.
+        var tx = await ledger.ExecuteAsync([SystemAccounts.Cash, accountId], (accounts, now) =>
+            LedgerTransaction.Transfer(
+                TransactionKind.Deposit, accounts[SystemAccounts.Cash], accounts[accountId], request.Amount,
+                "Depósito de cliente", "Depósito", now), ct);
+        return new OperationResponse(tx.Id);
     }
 
-    public async Task TransferAsync(TransferRequest request, CancellationToken ct)
+    public async Task<OperationResponse> TransferAsync(TransferRequest request, CancellationToken ct)
     {
         await transferValidator.ValidateAndThrowAsync(request, ct);
         var userId = currentUser.UserId;
-        var source = await (
-                from a in db.Accounts
-                join u in db.Users on a.UserId equals u.Id
-                where a.UserId == userId
-                select new { a.Id, u.Name })
-            .SingleOrDefaultAsync(ct) ?? throw new UnauthorizedException("Conta não encontrada.");
+        var source = await CustomerAccounts().Where(c => c.UserId == userId).SingleOrDefaultAsync(ct)
+            ?? throw new UnauthorizedException("Conta não encontrada.");
 
         var to = request.To.Trim();
-        var candidates = from a in db.Accounts join u in db.Users on a.UserId equals u.Id select new { a.Id, a.Number, u.Email, u.Name };
         var email = User.NormalizeEmail(to);
-        candidates = long.TryParse(to, out var number)
-            ? candidates.Where(c => c.Number == number)
-            : candidates.Where(c => c.Email == email);
-        var target = await candidates.SingleOrDefaultAsync(ct) ?? throw new NotFoundException("Destinatário não encontrado.");
-        if (target.Id == source.Id)
-            throw new DomainException("transfer.same_account", "Não é possível transferir para a própria conta.");
+        var target = await (long.TryParse(to, out var number)
+                ? CustomerAccounts().Where(c => c.Number == number)
+                : CustomerAccounts().Where(c => c.Email == email))
+            .SingleOrDefaultAsync(ct) ?? throw new NotFoundException("Destinatário não encontrado.");
 
-        await using var tx = await db.BeginTransactionAsync(ct);
-        var locked = await db.LockAccountsAsync([source.Id, target.Id], ct);
-        var from = locked.Single(a => a.Id == source.Id);
-        var dest = locked.Single(a => a.Id == target.Id);
-
-        from.Debit(request.Amount);
-        dest.Credit(request.Amount);
-        var now = Now();
-        db.Transactions.AddRange(
-            Transaction.Record(from.Id, TransactionType.TransferOut, -request.Amount, $"Transferência para {target.Name}", dest.Id, now),
-            Transaction.Record(dest.Id, TransactionType.TransferIn, request.Amount, $"Transferência de {source.Name}", from.Id, now));
-        await db.SaveChangesAsync(ct);
-        await tx.CommitAsync(ct);
+        var tx = await ledger.ExecuteAsync([source.Id, target.Id], (accounts, now) =>
+            LedgerTransaction.Transfer(
+                TransactionKind.InternalTransfer, accounts[source.Id], accounts[target.Id], request.Amount,
+                $"Transferência para {target.Name}", $"Transferência de {source.Name}", now), ct);
+        return new OperationResponse(tx.Id);
     }
+
+    // Member-init (not constructor) projection, so EF can translate further Where clauses on it.
+    private sealed class CustomerAccount
+    {
+        public Guid Id { get; init; }
+        public Guid UserId { get; init; }
+        public long Number { get; init; }
+        public string Email { get; init; } = "";
+        public string Name { get; init; } = "";
+    }
+
+    private IQueryable<CustomerAccount> CustomerAccounts() =>
+        from a in db.Accounts
+        join u in db.Users on a.UserId equals u.Id
+        where a.Type == AccountType.Customer
+        select new CustomerAccount { Id = a.Id, UserId = u.Id, Number = a.Number, Email = u.Email, Name = u.Name };
 
     private async Task<Guid> MyAccountIdAsync(CancellationToken ct)
     {
@@ -116,6 +126,4 @@ public class AccountService(
         var id = await db.Accounts.Where(a => a.UserId == userId).Select(a => (Guid?)a.Id).SingleOrDefaultAsync(ct);
         return id ?? throw new UnauthorizedException("Conta não encontrada.");
     }
-
-    private DateTime Now() => clock.GetUtcNow().UtcDateTime;
 }

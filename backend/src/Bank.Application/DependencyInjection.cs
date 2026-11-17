@@ -1,6 +1,7 @@
 using System.Globalization;
 using Bank.Application.Accounts;
 using Bank.Application.Auth;
+using Bank.Application.Ledger;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +17,8 @@ public static class DependencyInjection
 
         services.AddScoped<AuthService>();
         services.AddScoped<AccountService>();
+        services.AddScoped<LedgerPosting>();
+        services.AddScoped<ReconciliationService>();
         return services;
     }
 }

@@ -1,10 +1,18 @@
-export type Account = { name: string; email: string; number: string; balance: number }
+export type Account = {
+  name: string
+  email: string
+  number: string
+  availableBalance: number
+  blockedBalance: number
+  totalBalance: number
+}
 
 export type Tx = {
   id: string
-  type: 'Deposit' | 'TransferIn' | 'TransferOut'
+  kind: 'Deposit' | 'InternalTransfer' | 'Pix' | 'PixRefund'
   amount: number
   description: string
+  balanceAfter: number
   createdAt: string
 }
 
@@ -48,7 +56,11 @@ type Problem = { title?: string; errors?: Record<string, string[]> }
 export async function api<T = void>(path: string, body?: unknown): Promise<T> {
   const token = session.get()
   const headers: Record<string, string> = {}
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json'
+    // One key per user action: a network retry of the same call can never move money twice.
+    headers['Idempotency-Key'] = crypto.randomUUID()
+  }
   if (token) headers.Authorization = `Bearer ${token}`
 
   const res = await fetch(`/api${path}`, {

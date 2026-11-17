@@ -36,6 +36,7 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 app.UseExceptionHandler();
+app.UseIdempotencyBuffering();
 app.UseAuthentication();
 app.UseAuthorization();
 

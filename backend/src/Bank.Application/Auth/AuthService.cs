@@ -51,7 +51,7 @@ public class AuthService(
         var user = User.Create(request.Name, request.Email, now);
         user.SetPasswordHash(hasher.Hash(request.Password));
         db.Users.Add(user);
-        db.Accounts.Add(Account.Open(user.Id, now));
+        db.Accounts.Add(Account.OpenCustomer(user.Id, now));
         await db.SaveChangesAsync(ct);
         return new AuthResponse(tokens.CreateAccessToken(user), user.Name);
     }

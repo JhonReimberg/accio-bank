@@ -37,6 +37,11 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("balance");
 
+                    b.Property<decimal>("BlockedBalance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("blocked_balance");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -47,7 +52,18 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasColumnName("number")
                         .HasDefaultValueSql("nextval('account_numbers')");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<string>("SystemName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("system_name");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
@@ -64,11 +80,25 @@ namespace Bank.Infrastructure.Persistence.Migrations
 
                     b.ToTable("accounts", null, t =>
                         {
-                            t.HasCheckConstraint("ck_accounts_balance_non_negative", "balance >= 0");
+                            t.HasCheckConstraint("ck_accounts_blocked_balance_valid", "blocked_balance >= 0 AND (type <> 'Customer' OR blocked_balance <= balance)");
+
+                            t.HasCheckConstraint("ck_accounts_customer_balance_non_negative", "type <> 'Customer' OR balance >= 0");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000001"),
+                            Balance = 0m,
+                            BlockedBalance = 0m,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Number = 1L,
+                            SystemName = "Caixa",
+                            Type = "System"
                         });
                 });
 
-            modelBuilder.Entity("Bank.Domain.Accounts.Transaction", b =>
+            modelBuilder.Entity("Bank.Domain.Accounts.BalanceHold", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -84,9 +114,55 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("amount");
 
-                    b.Property<Guid?>("CounterpartyAccountId")
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTime?>("ReleasedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("released_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_balance_holds");
+
+                    b.HasIndex("AccountId", "Status")
+                        .HasDatabaseName("ix_balance_holds_account_id_status");
+
+                    b.ToTable("balance_holds", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Ledger.LedgerEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("counterparty_account_id");
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("BalanceAfter")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("balance_after");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -98,19 +174,52 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("description");
 
-                    b.Property<string>("Type")
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("direction");
+
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("transaction_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ledger_entries");
+
+                    b.HasIndex("TransactionId")
+                        .HasDatabaseName("ix_ledger_entries_transaction_id");
+
+                    b.HasIndex("AccountId", "CreatedAt")
+                        .HasDatabaseName("ix_ledger_entries_account_id_created_at");
+
+                    b.ToTable("ledger_entries", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_ledger_entries_amount_positive", "amount > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Bank.Domain.Ledger.LedgerTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
-                        .HasColumnName("type");
+                        .HasColumnName("kind");
 
                     b.HasKey("Id")
-                        .HasName("pk_transactions");
+                        .HasName("pk_ledger_transactions");
 
-                    b.HasIndex("AccountId", "CreatedAt")
-                        .HasDatabaseName("ix_transactions_account_id_created_at");
-
-                    b.ToTable("transactions", (string)null);
+                    b.ToTable("ledger_transactions", (string)null);
                 });
 
             modelBuilder.Entity("Bank.Domain.Users.User", b =>
@@ -151,24 +260,83 @@ namespace Bank.Infrastructure.Persistence.Migrations
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("Bank.Infrastructure.Idempotency.IdempotencyRecord", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("key");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("request_hash");
+
+                    b.Property<string>("ResponseBody")
+                        .HasColumnType("text")
+                        .HasColumnName("response_body");
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("integer")
+                        .HasColumnName("status_code");
+
+                    b.HasKey("UserId", "Key")
+                        .HasName("pk_idempotency_records");
+
+                    b.ToTable("idempotency_records", (string)null);
+                });
+
             modelBuilder.Entity("Bank.Domain.Accounts.Account", b =>
                 {
                     b.HasOne("Bank.Domain.Users.User", null)
                         .WithOne()
                         .HasForeignKey("Bank.Domain.Accounts.Account", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_accounts_users_user_id");
                 });
 
-            modelBuilder.Entity("Bank.Domain.Accounts.Transaction", b =>
+            modelBuilder.Entity("Bank.Domain.Accounts.BalanceHold", b =>
                 {
                     b.HasOne("Bank.Domain.Accounts.Account", null)
                         .WithMany()
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_transactions_accounts_account_id");
+                        .HasConstraintName("fk_balance_holds_accounts_account_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Ledger.LedgerEntry", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ledger_entries_accounts_account_id");
+
+                    b.HasOne("Bank.Domain.Ledger.LedgerTransaction", null)
+                        .WithMany("Entries")
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ledger_entries_ledger_transactions_transaction_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Ledger.LedgerTransaction", b =>
+                {
+                    b.Navigation("Entries");
                 });
 #pragma warning restore 612, 618
         }

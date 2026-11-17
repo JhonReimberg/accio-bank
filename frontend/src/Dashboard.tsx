@@ -96,7 +96,7 @@ export default function Dashboard({ onLogout }: Props) {
             {hidden ? 'Mostrar' : 'Esconder'}
           </button>
         </div>
-        <p className="amount">{hidden ? 'R$ ••••' : brl.format(account.balance)}</p>
+        <p className="amount">{hidden ? 'R$ ••••' : brl.format(account.availableBalance)}</p>
         <p className="muted small-text">
           Conta {account.number}{' '}
           <button className="link inline" onClick={() => navigator.clipboard?.writeText(account.number)}>

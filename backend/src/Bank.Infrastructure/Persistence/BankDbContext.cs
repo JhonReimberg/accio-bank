@@ -1,7 +1,9 @@
 using Bank.Application.Abstractions;
 using Bank.Application.Common;
 using Bank.Domain.Accounts;
+using Bank.Domain.Ledger;
 using Bank.Domain.Users;
+using Bank.Infrastructure.Idempotency;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
@@ -12,7 +14,10 @@ public class BankDbContext(DbContextOptions<BankDbContext> options) : DbContext(
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<Account> Accounts => Set<Account>();
-    public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<BalanceHold> BalanceHolds => Set<BalanceHold>();
+    public DbSet<LedgerTransaction> LedgerTransactions => Set<LedgerTransaction>();
+    public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

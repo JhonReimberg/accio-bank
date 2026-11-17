@@ -1,4 +1,5 @@
 using Bank.Application.Abstractions;
+using Bank.Infrastructure.Idempotency;
 using Bank.Infrastructure.Persistence;
 using Bank.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("Missing connection string 'Bank'.");
         services.AddDbContext<BankDbContext>(o => ConfigureDbContext(o, connectionString));
         services.AddScoped<IBankDbContext>(sp => sp.GetRequiredService<BankDbContext>());
+        services.AddScoped<IdempotencyStore>();
 
         services.AddSingleton(GetJwtOptions(configuration));
         services.AddSingleton<ITokenService, TokenService>();

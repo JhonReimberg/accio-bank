@@ -1,4 +1,5 @@
 using Bank.Domain.Accounts;
+using Bank.Domain.Ledger;
 using Bank.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -9,7 +10,9 @@ public interface IBankDbContext
 {
     DbSet<User> Users { get; }
     DbSet<Account> Accounts { get; }
-    DbSet<Transaction> Transactions { get; }
+    DbSet<BalanceHold> BalanceHolds { get; }
+    DbSet<LedgerTransaction> LedgerTransactions { get; }
+    DbSet<LedgerEntry> LedgerEntries { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 
