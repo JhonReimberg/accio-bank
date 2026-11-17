@@ -7,6 +7,20 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker_Compose-1_comando-2496ED?logo=docker&logoColor=white)
 
+## Tecnologias
+
+<p>
+  <img src="https://skillicons.dev/icons?i=cs,dotnet,postgres,react,ts,vite,docker,nginx,githubactions" alt="C#, .NET, PostgreSQL, React, TypeScript, Vite, Docker, nginx e GitHub Actions" />
+</p>
+
+| Camada | Stack |
+| --- | --- |
+| Backend | C# · ASP.NET Core 10 (Minimal APIs) · EF Core · SignalR · Hangfire · FluentValidation · Serilog · QuestPDF |
+| Banco de dados | PostgreSQL 17 |
+| Frontend | React 19 · TypeScript · Vite · React Router · TanStack Query |
+| Testes | xUnit · Testcontainers (PostgreSQL real) |
+| Infra | Docker Compose · nginx · GitHub Actions |
+
 > **Projeto fictício, feito para portfólio.** "Vela" não é uma instituição real e não tem relação com nenhum banco. Os CPFs, chaves e documentos usados são gerados para teste.
 
 Um banco digital com regras de negócio reais: **ledger de partidas dobradas**, **controle de concorrência**, **idempotência**, **PIX** (chaves, QR Code, copia e cola, devolução, agendamento e limites noturnos), **onboarding com KYC**, **2FA**, **senha transacional** e **crédito** (score explicável, motor de elegibilidade, empréstimo pela Tabela Price, cheque especial e back-office), **cartões** (fatura, parcelamento, rotativo), **investimentos** (CDB, caixinhas, IR regressivo), **antifraude**, **boletos** e **notificações em tempo real** (SignalR). As três fases do [roadmap](#roadmap) estão prontas.
