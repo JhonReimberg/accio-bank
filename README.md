@@ -6,7 +6,7 @@
 
 > **Accio** é o feitiço que chama as coisas até você. O AccioBank chama o seu dinheiro: um banco digital com tema noturno de magia, uma coruja como mascote e as regras de um banco de verdade por baixo.
 
-[![CI](https://github.com/JhonReimberg/vela-banco-digital/actions/workflows/ci.yml/badge.svg)](https://github.com/JhonReimberg/vela-banco-digital/actions/workflows/ci.yml)
+[![CI](https://github.com/JhonReimberg/accio-bank/actions/workflows/ci.yml/badge.svg)](https://github.com/JhonReimberg/accio-bank/actions/workflows/ci.yml)
 ![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-Minimal_APIs-512BD4)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
@@ -28,7 +28,7 @@
 | Testes | xUnit · Testcontainers (PostgreSQL real) |
 | Infra | Docker Compose · nginx · GitHub Actions |
 
-> **Projeto fictício, feito para portfólio.** "AccioBank" não é uma instituição real e não tem relação com nenhum banco. Os CPFs, chaves e documentos usados são gerados para teste. O projeto começou com o nome "Vela" (por isso o repositório e os e-mails de demonstração ainda usam esse nome).
+> **Projeto fictício, feito para portfólio.** "AccioBank" não é uma instituição real e não tem relação com nenhum banco. Os CPFs, chaves e documentos usados são gerados para teste. O projeto começou com o nome "Vela" (por isso os e-mails de demonstração ainda usam esse nome).
 
 Um banco digital com regras de negócio reais: **ledger de partidas dobradas**, **controle de concorrência**, **idempotência**, **PIX** (chaves, QR Code, copia e cola, devolução, agendamento e limites noturnos), **onboarding com KYC**, **2FA**, **senha transacional** e **crédito** (score explicável, motor de elegibilidade, empréstimo pela Tabela Price, cheque especial e back-office), **cartões** (fatura, parcelamento, rotativo), **investimentos** (CDB, caixinhas, IR regressivo), **antifraude**, **boletos** e **notificações em tempo real** (SignalR). As três fases do [roadmap](#roadmap) estão prontas.
 
