@@ -6,7 +6,7 @@ namespace Bank.Api.Endpoints;
 public static class AuthEndpoints
 {
     /// <summary>The refresh token never reaches JavaScript: httpOnly cookie scoped to the auth routes.</summary>
-    public const string RefreshCookie = "vela_refresh";
+    public const string RefreshCookie = "accio_refresh";
 
     public static void MapAuthEndpoints(this IEndpointRouteBuilder app)
     {

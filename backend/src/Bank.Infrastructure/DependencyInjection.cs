@@ -54,6 +54,7 @@ public static class DependencyInjection
         });
         services.AddSingleton(TimeProvider.System);
         services.AddDataProtection()
+            // Kept from the old name on purpose: changing it would make stored 2FA secrets unreadable.
             .SetApplicationName("vela-bank")
             .PersistKeysToDbContext<BankDbContext>();
 

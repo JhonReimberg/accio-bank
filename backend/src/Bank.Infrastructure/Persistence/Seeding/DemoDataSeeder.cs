@@ -20,7 +20,7 @@ namespace Bank.Infrastructure.Persistence.Seeding;
 /// </summary>
 public class DemoDataSeeder(BankDbContext db, ISecretHasher hasher, IFileStorage storage, TimeProvider clock, ILogger<DemoDataSeeder> logger)
 {
-    public const string Password = "Vela@demo123";
+    public const string Password = "Accio@demo123";
     public const string Pin = "2580";
     private const string DocumentPath = "seed/sample-document.png";
 
@@ -33,24 +33,24 @@ public class DemoDataSeeder(BankDbContext db, ISecretHasher hasher, IFileStorage
 
     public async Task SeedAsync(CancellationToken ct)
     {
-        if (await db.Users.AnyAsync(u => u.Email == "carla@vela.dev", ct)) return;
+        if (await db.Users.AnyAsync(u => u.Email == "carla@accio.dev", ct)) return;
         _now = clock.GetUtcNow().UtcDateTime;
         await storage.SaveAsync(DocumentPath, new MemoryStream(SamplePng), ct);
         var cash = await db.Accounts.SingleAsync(a => a.Id == SystemAccounts.Cash, ct);
 
         // Eligible for credit (phase 2): 4-month-old Plus account with steady recent movement.
-        var carla = CreateCustomer("Carla", "carla@vela.dev", "Carla Mendes de Souza", 12_000, "Engenheira de dados", daysAgo: 120, "+5511987650001");
+        var carla = CreateCustomer("Carla", "carla@accio.dev", "Carla Mendes de Souza", 12_000, "Engenheira de dados", daysAgo: 120, "+5511987650001");
         // Blocked by account age: opened 10 days ago.
-        var diego = CreateCustomer("Diego", "diego@vela.dev", "Diego Rocha Alves", 3_200, "Vendedor", daysAgo: 10, "+5521987650002");
+        var diego = CreateCustomer("Diego", "diego@accio.dev", "Diego Rocha Alves", 3_200, "Vendedor", daysAgo: 10, "+5521987650002");
         // Delinquent: took a loan 75 days ago, paid the 1st installment, the 2nd is overdue.
-        var eduardo = CreateCustomer("Eduardo", "eduardo@vela.dev", "Eduardo Lima Pereira", 2_100, "Motorista", daysAgo: 300, "+5531987650003");
+        var eduardo = CreateCustomer("Eduardo", "eduardo@accio.dev", "Eduardo Lima Pereira", 2_100, "Motorista", daysAgo: 300, "+5531987650003");
         // Submitted and waiting in the KYC queue (visible when auto-approval is off).
-        CreateCustomer("Fernanda", "fernanda@vela.dev", "Fernanda Alves Costa", 6_500, "Advogada", daysAgo: 1, "+5541987650004", approve: false);
+        CreateCustomer("Fernanda", "fernanda@accio.dev", "Fernanda Alves Costa", 6_500, "Advogada", daysAgo: 1, "+5541987650004", approve: false);
 
-        AddStaff("Ana Analista", "analista@vela.dev", Role.Analyst);
-        AddStaff("Admin Vela", "admin@vela.dev", Role.Admin);
+        AddStaff("Ana Analista", "analista@accio.dev", Role.Analyst);
+        AddStaff("Admin Accio", "admin@accio.dev", Role.Admin);
 
-        AddKey(carla.Account, PixKeyType.Email, "carla@vela.dev", daysAgo: 115);
+        AddKey(carla.Account, PixKeyType.Email, "carla@accio.dev", daysAgo: 115);
         AddKey(carla.Account, PixKeyType.Random, null, daysAgo: 115);
         AddKey(diego.Account, PixKeyType.Phone, "+5521987650002", daysAgo: 9);
         AddKey(eduardo.Account, PixKeyType.Cpf, eduardo.Customer.Cpf, daysAgo: 290);
@@ -166,7 +166,7 @@ public class DemoDataSeeder(BankDbContext db, ISecretHasher hasher, IFileStorage
             ScheduleFrequency.Monthly, today.AddDays(5), null, today, _now));
 
         await db.SaveChangesAsync(ct);
-        logger.LogInformation("Demo data seeded: customers carla/diego/eduardo/fernanda@vela.dev, staff analista/admin@vela.dev");
+        logger.LogInformation("Demo data seeded: customers carla/diego/eduardo/fernanda@accio.dev, staff analista/admin@accio.dev");
     }
 
     private sealed record Seeded(User User, Account Account, Customer Customer, string Name);

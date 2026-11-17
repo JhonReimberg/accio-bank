@@ -28,7 +28,7 @@
 | Testes | xUnit · Testcontainers (PostgreSQL real) |
 | Infra | Docker Compose · nginx · GitHub Actions |
 
-> **Projeto fictício, feito para portfólio.** "AccioBank" não é uma instituição real e não tem relação com nenhum banco. Os CPFs, chaves e documentos usados são gerados para teste. O projeto começou com o nome "Vela" (por isso os e-mails de demonstração ainda usam esse nome).
+> **Projeto fictício, feito para portfólio.** "AccioBank" não é uma instituição real e não tem relação com nenhum banco. Os CPFs, chaves e documentos usados são gerados para teste. O projeto começou com o nome "Vela".
 
 Um banco digital com regras de negócio reais: **ledger de partidas dobradas**, **controle de concorrência**, **idempotência**, **PIX** (chaves, QR Code, copia e cola, devolução, agendamento e limites noturnos), **onboarding com KYC**, **2FA**, **senha transacional** e **crédito** (score explicável, motor de elegibilidade, empréstimo pela Tabela Price, cheque especial e back-office), **cartões** (fatura, parcelamento, rotativo), **investimentos** (CDB, caixinhas, IR regressivo), **antifraude**, **boletos** e **notificações em tempo real** (SignalR). As três fases do [roadmap](#roadmap) estão prontas.
 
@@ -82,16 +82,16 @@ docker compose up --build
 
 ### Usuários de demonstração (criados pelo seed)
 
-Senha de todos: `Vela@demo123` · senha transacional: `2580`
+Senha de todos: `Accio@demo123` · senha transacional: `2580`
 
 | Usuário | Situação |
 | --- | --- |
-| `carla@vela.dev` | Cliente Plus com 4 meses de conta: **elegível ao crédito**, com caixinha de viagem (recebe o arredondamento das compras), CDB, cartão de crédito com compra parcelada e um boleto emitido |
-| `diego@vela.dev` | Conta aberta há 10 dias: **bloqueado por tempo de conta**; tem um PIX de R$ 1.200 **retido pelo antifraude** esperando o analista |
-| `eduardo@vela.dev` | Pegou um empréstimo, pagou a 1ª parcela e está com a 2ª **em atraso** (multa + mora) |
-| `fernanda@vela.dev` | Cadastro **aguardando análise** na fila de KYC |
-| `analista@vela.dev` | Perfil **Analyst** (filas de KYC e antifraude, bloqueios, auditoria) |
-| `admin@vela.dev` | Perfil **Admin** (tudo do analista + políticas de crédito e antifraude, conciliação do ledger) |
+| `carla@accio.dev` | Cliente Plus com 4 meses de conta: **elegível ao crédito**, com caixinha de viagem (recebe o arredondamento das compras), CDB, cartão de crédito com compra parcelada e um boleto emitido |
+| `diego@accio.dev` | Conta aberta há 10 dias: **bloqueado por tempo de conta**; tem um PIX de R$ 1.200 **retido pelo antifraude** esperando o analista |
+| `eduardo@accio.dev` | Pegou um empréstimo, pagou a 1ª parcela e está com a 2ª **em atraso** (multa + mora) |
+| `fernanda@accio.dev` | Cadastro **aguardando análise** na fila de KYC |
+| `analista@accio.dev` | Perfil **Analyst** (filas de KYC e antifraude, bloqueios, auditoria) |
+| `admin@accio.dev` | Perfil **Admin** (tudo do analista + políticas de crédito e antifraude, conciliação do ledger) |
 
 Também dá para abrir uma conta nova pelo app. No modo demo, a análise de KYC é aprovada automaticamente (`Kyc__AutoApprove`).
 

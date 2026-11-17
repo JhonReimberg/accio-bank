@@ -11,7 +11,7 @@ public sealed record BoletoData(string Barcode, string BankCode, decimal Amount,
 /// </summary>
 public static class BoletoCode
 {
-    public const string VelaBankCode = "999";
+    public const string OwnBankCode = "999";
     private static readonly DateOnly FactorBase = new(1997, 10, 7);
     private static readonly DomainException Invalid = new("boleto.invalid", "Código do boleto inválido. Confira os números digitados.");
 
@@ -19,7 +19,7 @@ public static class BoletoCode
     {
         if (freeField.Length != 25 || !freeField.All(char.IsAsciiDigit)) throw new ArgumentException("Free field must have 25 digits.", nameof(freeField));
         var cents = (long)(Money.Round(amount) * 100);
-        var noDv = $"{VelaBankCode}9{Factor(due):D4}{cents:D10}{freeField}";
+        var noDv = $"{OwnBankCode}9{Factor(due):D4}{cents:D10}{freeField}";
         return noDv[..4] + Mod11(noDv) + noDv[4..];
     }
 

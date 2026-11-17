@@ -12,11 +12,11 @@ public class KycReviewedHandler(IBankDbContext db, IEmailSender email, TimeProvi
     {
         var user = await db.Users.SingleAsync(u => u.Id == e.UserId, ct);
         var (title, body) = e.Approved
-            ? ("Conta aprovada!", "Sua conta Vela está ativa. Já pode receber e fazer PIX.")
+            ? ("Conta aprovada!", "Sua conta AccioBank está ativa. Já pode receber e fazer PIX.")
             : ("Cadastro precisa de ajustes", $"Não conseguimos aprovar seu cadastro: {e.Reason}. Corrija e envie novamente.");
         db.Notifications.Add(Notification.Create(user.Id, title, body, clock.GetUtcNow().UtcDateTime));
         await db.SaveChangesAsync(ct);
-        await email.SendAsync(user.Email, $"Vela: {title}", body, ct);
+        await email.SendAsync(user.Email, $"AccioBank: {title}", body, ct);
     }
 }
 

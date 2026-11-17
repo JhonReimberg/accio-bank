@@ -16,7 +16,7 @@ public class NewDeviceSignInHandler(IBankDbContext db, IEmailSender email, TimeP
         var body = $"Novo acesso pelo dispositivo \"{e.DeviceName}\" em {when}. Se não foi você, troque sua senha e remova o dispositivo.";
         db.Notifications.Add(Notification.Create(user.Id, "Acesso em novo dispositivo", body, clock.GetUtcNow().UtcDateTime));
         await db.SaveChangesAsync(ct);
-        await email.SendAsync(user.Email, "Vela: acesso em novo dispositivo", body, ct);
+        await email.SendAsync(user.Email, "AccioBank: acesso em novo dispositivo", body, ct);
     }
 }
 
@@ -29,6 +29,6 @@ public class SignInLockedOutHandler(IBankDbContext db, IEmailSender email, TimeP
         var body = $"Bloqueamos o acesso à sua conta até {until} após várias tentativas de senha erradas.";
         db.Notifications.Add(Notification.Create(user.Id, "Acesso bloqueado temporariamente", body, clock.GetUtcNow().UtcDateTime));
         await db.SaveChangesAsync(ct);
-        await email.SendAsync(user.Email, "Vela: acesso bloqueado temporariamente", body, ct);
+        await email.SendAsync(user.Email, "AccioBank: acesso bloqueado temporariamente", body, ct);
     }
 }

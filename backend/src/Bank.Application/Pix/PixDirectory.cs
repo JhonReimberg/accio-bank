@@ -9,7 +9,7 @@ namespace Bank.Application.Pix;
 public record PixRecipient(Guid AccountId, Guid UserId, string Name, string? Cpf, long AccountNumber, PixKeyType KeyType, string KeyValue)
 {
     public PixRecipientResponse ToResponse() =>
-        new(Name, Cpf is null ? null : Domain.Customers.Cpf.Mask(Cpf), "Vela", KeyType, PixKeys.Mask(KeyType, KeyValue));
+        new(Name, Cpf is null ? null : Domain.Customers.Cpf.Mask(Cpf), "AccioBank", KeyType, PixKeys.Mask(KeyType, KeyValue));
 }
 
 /// <summary>What the payer sees before confirming: enough to recognize the person, never the full CPF.</summary>

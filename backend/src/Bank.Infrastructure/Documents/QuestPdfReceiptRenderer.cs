@@ -21,7 +21,7 @@ internal class QuestPdfReceiptRenderer : IReceiptRenderer
         {
             row.RelativeItem().Column(c =>
             {
-                c.Item().Text("Vela").FontSize(20).Bold().FontColor(Brand);
+                c.Item().Text("AccioBank").FontSize(20).Bold().FontColor(Brand);
                 c.Item().Text("Banco digital fictício — projeto de portfólio").FontSize(8).FontColor(Colors.Grey.Medium);
             });
             row.AutoItem().AlignBottom().Text(Title(r.Kind)).FontSize(12).SemiBold();
@@ -52,7 +52,7 @@ internal class QuestPdfReceiptRenderer : IReceiptRenderer
             c.Item().Text(title).FontSize(8).FontColor(Colors.Grey.Darken1);
             c.Item().Text(party.Name).SemiBold();
             if (party.MaskedCpf is not null) c.Item().Text($"CPF {party.MaskedCpf}");
-            if (party.AccountNumber is not null) c.Item().Text($"Vela · Conta {party.AccountNumber}");
+            if (party.AccountNumber is not null) c.Item().Text($"AccioBank · Conta {party.AccountNumber}");
         });
 
     private static void Line(ColumnDescriptor col, string label, string value) =>

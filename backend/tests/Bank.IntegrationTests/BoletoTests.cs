@@ -32,7 +32,7 @@ public class BoletoTests(FakeClockFactory factory) : IClassFixture<FakeClockFact
         var boleto = (await (await issuer.Client.PostAsJsonAsync("/api/boletos", new IssueBoletoRequest(150.75m, Today.AddDays(5), "Aula de violão")))
             .Content.ReadFromJsonAsync<BoletoResponse>())!;
         var info = await payer.Client.GetFromJsonAsync<BoletoInfo>($"/api/boletos/inspect?code={Uri.EscapeDataString(boleto.DigitableLine)}");
-        Assert.Equal((150.75m, true, (DateOnly?)Today.AddDays(5)), (info!.Amount, info.IssuedByVela, info.DueDate));
+        Assert.Equal((150.75m, true, (DateOnly?)Today.AddDays(5)), (info!.Amount, info.IssuedHere, info.DueDate));
 
         var paid = await (await Pay(payer, boleto.DigitableLine)).Content.ReadFromJsonAsync<BoletoPaymentResponse>();
         Assert.Equal(BoletoPaymentStatus.Paid, paid!.Status);

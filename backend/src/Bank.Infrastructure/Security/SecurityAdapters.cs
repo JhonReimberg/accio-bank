@@ -8,7 +8,7 @@ namespace Bank.Infrastructure.Security;
 /// <summary>RFC 6238 TOTP (6 digits, 30s), compatible with Google Authenticator and similar apps.</summary>
 internal class TotpService : ITotpService
 {
-    private const string IssuerName = "Vela Banco Digital";
+    private const string IssuerName = "AccioBank";
 
     public string NewSecret() => Base32Encoding.ToString(KeyGeneration.GenerateRandomKey(20));
 

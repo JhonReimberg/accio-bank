@@ -91,7 +91,7 @@ public class LoanInstallmentOverdueHandler(IBankDbContext db, IEmailSender email
                    "Há multa de 2% e juros de mora por dia. Deixe saldo na conta para o débito automático ou pague pelo app.";
         db.Notifications.Add(Notification.Create(user.Id, "Parcela em atraso", body, clock.GetUtcNow().UtcDateTime));
         await db.SaveChangesAsync(ct);
-        await email.SendAsync(user.Email, "Vela: parcela em atraso", body, ct);
+        await email.SendAsync(user.Email, "AccioBank: parcela em atraso", body, ct);
     }
 }
 

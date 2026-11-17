@@ -29,13 +29,13 @@ public class SeedTests(BankApiFactory factory)
         }
 
         // The three credit situations the seed promises.
-        var eduardo = await TestUsers.LoginAsync(factory, "eduardo@vela.dev", password: DemoDataSeeder.Password);
+        var eduardo = await TestUsers.LoginAsync(factory, "eduardo@accio.dev", password: DemoDataSeeder.Password);
         var eduardoCredit = (await eduardo.GetFromJsonAsync<EligibilityResponse>("/api/credit/eligibility"))!;
         Assert.False(eduardoCredit.Rules.Single(r => r.Code == "no_overdue").Passed);
-        var diego = await TestUsers.LoginAsync(factory, "diego@vela.dev", password: DemoDataSeeder.Password);
+        var diego = await TestUsers.LoginAsync(factory, "diego@accio.dev", password: DemoDataSeeder.Password);
         Assert.False((await diego.GetFromJsonAsync<EligibilityResponse>("/api/credit/eligibility"))!.Rules.Single(r => r.Code == "account_age").Passed);
 
-        var carla = await TestUsers.LoginAsync(factory, "carla@vela.dev", password: DemoDataSeeder.Password);
+        var carla = await TestUsers.LoginAsync(factory, "carla@accio.dev", password: DemoDataSeeder.Password);
         var carlaCredit = (await carla.GetFromJsonAsync<EligibilityResponse>("/api/credit/eligibility"))!;
         Assert.True(carlaCredit.Eligible, string.Join("; ", carlaCredit.Rules.Where(r => !r.Passed).Select(r => r.Message)));
         var account = await carla.AccountAsync();

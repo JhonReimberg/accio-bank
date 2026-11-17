@@ -382,7 +382,7 @@ export type Boleto = {
   paidAt: string | null
 }
 
-export type BoletoInfo = { barcode: string; amount: number; dueDate: string | null; beneficiaryName: string; issuedByVela: boolean; overdue: boolean }
+export type BoletoInfo = { barcode: string; amount: number; dueDate: string | null; beneficiaryName: string; issuedHere: boolean; overdue: boolean }
 
 export type BoletoPayment = {
   id: string

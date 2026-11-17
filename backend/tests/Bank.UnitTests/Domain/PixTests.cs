@@ -14,13 +14,13 @@ public class BrCodeTests
     [Fact]
     public void Build_and_parse_round_trip_with_amount_and_accents_removed()
     {
-        var payload = BrCode.Build("ana@vela.dev", "Ana Conceição da Silva Gonçalves", "São Paulo", 25.5m, "Almoço", "PEDIDO42");
+        var payload = BrCode.Build("ana@accio.dev", "Ana Conceição da Silva Gonçalves", "São Paulo", 25.5m, "Almoço", "PEDIDO42");
 
         Assert.StartsWith("000201010211", payload);
         Assert.Contains("5303986", payload);
         Assert.Contains("540525.50", payload);
         var data = BrCode.Parse(payload);
-        Assert.Equal(("ana@vela.dev", 25.5m, "PEDIDO42", "Almoco"), (data.Key, data.Amount, data.TxId, data.Description));
+        Assert.Equal(("ana@accio.dev", 25.5m, "PEDIDO42", "Almoco"), (data.Key, data.Amount, data.TxId, data.Description));
         Assert.Equal("Ana Conceicao da Silva Go", data.MerchantName); // ASCII, 25 chars max
         Assert.Equal("Sao Paulo", data.MerchantCity);
     }
@@ -36,7 +36,7 @@ public class BrCodeTests
     [Fact]
     public void Tampered_codes_fail_the_checksum()
     {
-        var payload = BrCode.Build("ana@vela.dev", "Ana", "Recife", 10m);
+        var payload = BrCode.Build("ana@accio.dev", "Ana", "Recife", 10m);
         var tampered = payload.Replace("540510.00", "540599.00");
         Assert.Equal("brcode.checksum", Assert.Throws<DomainException>(() => BrCode.Parse(tampered)).Code);
         Assert.Equal("brcode.invalid", Assert.Throws<DomainException>(() => BrCode.Parse("not a pix code")).Code);
@@ -49,8 +49,8 @@ public class PixKeyTests
     private static readonly DateTime Now = new(2026, 11, 16, 15, 0, 0, DateTimeKind.Utc);
 
     [Theory]
-    [InlineData("ana@vela.dev", PixKeyType.Email, "ana@vela.dev")]
-    [InlineData(" Ana@Vela.dev ", PixKeyType.Email, "ana@vela.dev")]
+    [InlineData("ana@accio.dev", PixKeyType.Email, "ana@accio.dev")]
+    [InlineData(" Ana@Accio.dev ", PixKeyType.Email, "ana@accio.dev")]
     [InlineData("+55 (11) 91234-5678", PixKeyType.Phone, "+5511912345678")]
     [InlineData("529.982.247-25", PixKeyType.Cpf, "52998224725")]
     [InlineData("0f8fad5b-d9cb-469f-a165-70867728950e", PixKeyType.Random, "0f8fad5b-d9cb-469f-a165-70867728950e")]
@@ -77,8 +77,8 @@ public class PixKeyTests
 
     [Fact]
     public void Masks_hide_most_of_the_key() =>
-        Assert.Equal(("***.982.247-**", "an***@vela.dev", "+5511*****5678"),
-            (PixKeys.Mask(PixKeyType.Cpf, OwnerCpf), PixKeys.Mask(PixKeyType.Email, "ana@vela.dev"), PixKeys.Mask(PixKeyType.Phone, "+5511912345678")));
+        Assert.Equal(("***.982.247-**", "an***@accio.dev", "+5511*****5678"),
+            (PixKeys.Mask(PixKeyType.Cpf, OwnerCpf), PixKeys.Mask(PixKeyType.Email, "ana@accio.dev"), PixKeys.Mask(PixKeyType.Phone, "+5511912345678")));
 }
 
 public class PixLimitTests

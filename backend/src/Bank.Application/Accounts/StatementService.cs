@@ -126,7 +126,7 @@ public class StatementService(
             var p = entry is null ? null : parties.Single(x => x.Id == entry.AccountId);
             if (p is null) return null;
             return p.Type == AccountType.System
-                ? new ReceiptParty($"Vela ({p.SystemName})", null, null)
+                ? new ReceiptParty($"AccioBank ({p.SystemName})", null, null)
                 : new ReceiptParty(p.FullName ?? p.UserName ?? "", p.Cpf is null ? null : Cpf.Mask(p.Cpf), p.Number.ToString());
         }
 

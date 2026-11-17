@@ -16,7 +16,7 @@ public class SecurityTests(BankApiFactory factory)
     private HttpClient CookielessClient() => factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
 
     private static string RefreshCookieOf(HttpResponseMessage res) =>
-        res.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("vela_refresh=")).Split(';')[0];
+        res.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("accio_refresh=")).Split(';')[0];
 
     private static HttpRequestMessage RefreshWith(string cookie)
     {

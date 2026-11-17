@@ -105,7 +105,7 @@ internal static class ApiSetup
         {
             o.AddDocumentTransformer((doc, _, _) =>
             {
-                doc.Info.Title = "Vela — banco digital (API)";
+                doc.Info.Title = "AccioBank — banco digital (API)";
                 doc.Info.Description = "Projeto fictício de portfólio. Autentique em /api/auth/login e use o token como Bearer.";
                 doc.Components ??= new OpenApiComponents();
                 doc.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();

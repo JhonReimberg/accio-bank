@@ -16,6 +16,7 @@ export function onUnauthorized(handler: () => void) {
   onSessionLost = handler
 }
 
+// Old prefix kept on purpose: renaming would make every browser look like a new device.
 const DEVICE_KEY = 'vela.device'
 let memoryDeviceId: string | null = null
 

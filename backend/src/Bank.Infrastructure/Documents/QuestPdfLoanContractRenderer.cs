@@ -22,7 +22,7 @@ internal class QuestPdfLoanContractRenderer : ILoanContractRenderer
         {
             row.RelativeItem().Column(c =>
             {
-                c.Item().Text("Vela").FontSize(20).Bold().FontColor(Brand);
+                c.Item().Text("AccioBank").FontSize(20).Bold().FontColor(Brand);
                 c.Item().Text("Banco digital fictício — projeto de portfólio").FontSize(8).FontColor(Colors.Grey.Medium);
             });
             row.AutoItem().AlignBottom().Text("Contrato de Empréstimo Pessoal").FontSize(13).SemiBold();
@@ -36,7 +36,7 @@ internal class QuestPdfLoanContractRenderer : ILoanContractRenderer
             {
                 c.Item().Text("Cliente (emitente)").FontSize(8).FontColor(Colors.Grey.Darken1);
                 c.Item().Text(customerName).SemiBold();
-                c.Item().Text($"CPF {cpf} · Vela · Conta {accountNumber}");
+                c.Item().Text($"CPF {cpf} · AccioBank · Conta {accountNumber}");
             });
 
             col.Item().Table(t =>

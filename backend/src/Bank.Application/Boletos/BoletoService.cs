@@ -19,7 +19,7 @@ public record IssueBoletoRequest(decimal Amount, DateOnly DueDate, string? Descr
 
 public record BoletoResponse(Guid Id, decimal Amount, DateOnly DueDate, string? Description, string DigitableLine, string Barcode, BoletoStatus Status, DateTime CreatedAt, DateTime? PaidAt);
 
-public record BoletoInfo(string Barcode, decimal Amount, DateOnly? DueDate, string BeneficiaryName, bool IssuedByVela, bool Overdue);
+public record BoletoInfo(string Barcode, decimal Amount, DateOnly? DueDate, string BeneficiaryName, bool IssuedHere, bool Overdue);
 
 /// <param name="Amount">Only for boletos without a printed amount.</param>
 /// <param name="ScheduledFor">Empty or today pays now; a future date schedules it.</param>
@@ -159,7 +159,7 @@ public class BoletoPayments(IBankDbContext db, LedgerPosting ledger, IAuditLog a
     public const string ExternalBeneficiary = "Beneficiário de outro banco (simulado)";
 
     public Task<Boleto?> FindIssuedAsync(BoletoData data, CancellationToken ct) =>
-        data.BankCode == BoletoCode.VelaBankCode ? db.Boletos.AsNoTracking().SingleOrDefaultAsync(b => b.Barcode == data.Barcode, ct) : Task.FromResult<Boleto?>(null);
+        data.BankCode == BoletoCode.OwnBankCode ? db.Boletos.AsNoTracking().SingleOrDefaultAsync(b => b.Barcode == data.Barcode, ct) : Task.FromResult<Boleto?>(null);
 
     /// <summary>
     /// Ours: payer → beneficiary, and the boleto becomes paid (checked under the beneficiary lock, so it is paid once).
