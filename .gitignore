@@ -1,0 +1,17 @@
+bin/
+obj/
+node_modules/
+dist/
+*.user
+.vs/
+.vscode/
+.idea/
+.env
+appsettings.Development.json
+storage/
+TestResults/
+
+# Local assistant files
+CLAUDE.md
+CLAUDE.local.md
+.claude/

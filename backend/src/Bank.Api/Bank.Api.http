@@ -1,0 +1,36 @@
+@host = http://localhost:5080
+# Paste the token returned by register/login here.
+@token =
+
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "name": "Ana Souza", "email": "ana@example.com", "password": "senha-forte-123" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "ana@example.com", "password": "senha-forte-123" }
+
+###
+GET {{host}}/api/account
+Authorization: Bearer {{token}}
+
+###
+POST {{host}}/api/account/deposits
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "amount": 250.00 }
+
+###
+POST {{host}}/api/account/transfers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "to": "10000002", "amount": 49.90 }
+
+###
+GET {{host}}/api/account/transactions
+Authorization: Bearer {{token}}
