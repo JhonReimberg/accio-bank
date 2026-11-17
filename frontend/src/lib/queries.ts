@@ -9,6 +9,8 @@ export const keys = {
   notifications: ['notifications'] as const,
   pix: ['pix'] as const,
   security: ['security'] as const,
+  cards: ['account', 'cards'] as const,
+  creditLine: ['account', 'credit-line'] as const,
 }
 
 export const useAccount = () => useQuery({ queryKey: keys.account, queryFn: () => api<Account>('/account') })

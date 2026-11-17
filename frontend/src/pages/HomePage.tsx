@@ -22,6 +22,10 @@ const shortcuts = [
   { to: '/pix/receber', label: 'Receber', icon: '↙' },
   { to: '/extrato', label: 'Extrato', icon: '≡' },
   { to: '/depositar', label: 'Depositar', icon: '+' },
+  { to: '/pagamentos', label: 'Boleto e recarga', icon: '▤' },
+  { to: '/cartoes/fatura', label: 'Fatura', icon: '▭' },
+  { to: '/investimentos', label: 'Caixinhas', icon: '↑' },
+  { to: '/seguranca', label: 'Segurança', icon: '⚿' },
 ]
 
 export default function HomePage() {

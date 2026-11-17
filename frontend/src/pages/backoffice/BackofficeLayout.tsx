@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/useAuth'
 const links = [
   { to: '/backoffice', label: 'Painel', icon: '▦', end: true },
   { to: '/backoffice/kyc', label: 'Fila de KYC', icon: '☑' },
+  { to: '/backoffice/antifraude', label: 'Antifraude', icon: '⚠' },
   { to: '/backoffice/clientes', label: 'Clientes', icon: '☺' },
   { to: '/backoffice/auditoria', label: 'Auditoria', icon: '⌕' },
   { to: '/backoffice/politica', label: 'Política de crédito', icon: '%' },

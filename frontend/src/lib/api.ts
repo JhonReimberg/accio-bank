@@ -71,7 +71,7 @@ export function refreshSession(): Promise<Session | null> {
 }
 
 type Options = {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   body?: unknown
   form?: FormData
   /** Money movements: one Idempotency-Key per user action, reused if the call is retried. */

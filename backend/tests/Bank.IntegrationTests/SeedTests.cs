@@ -46,5 +46,16 @@ public class SeedTests(BankApiFactory factory)
         Assert.Equal(account.TotalBalance, statement[0].BalanceAfter);
         for (var i = 0; i < statement.Count - 1; i++)
             Assert.Equal(statement[i + 1].BalanceAfter + statement[i].Amount, statement[i].BalanceAfter);
+
+        // Phase 3 demo data: investments with round-up, credit card invoices, a PIX held for the analyst.
+        var investments = (await carla.GetFromJsonAsync<List<Bank.Application.Investments.InvestmentResponse>>("/api/investments"))!;
+        Assert.Equal(2_300.60m, investments.Single(i => i.RoundUpCardPurchases).Principal);
+        var line = (await carla.GetFromJsonAsync<Bank.Application.Cards.CreditLineResponse>("/api/cards/credit-line"))!;
+        Assert.Equal(6_000m - 459.90m - 186.40m, line.Available);
+        var analyst = await TestUsers.CreateStaffAsync(factory, Bank.Domain.Users.Role.Analyst);
+        var queue = (await analyst.GetFromJsonAsync<PagedResult<Bank.Application.Fraud.FraudReviewResponse>>("/api/admin/fraud/reviews"))!;
+        Assert.Contains(queue.Items, r => r.Amount == 1_200 && r.Reasons.Contains("média"));
+        using var check = factory.Services.CreateScope();
+        Assert.True((await check.ServiceProvider.GetRequiredService<Bank.Application.Ledger.ReconciliationService>().RunAsync(CancellationToken.None)).IsBalanced);
     }
 }

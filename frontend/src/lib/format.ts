@@ -57,6 +57,13 @@ export const kindLabel: Record<string, string> = {
   LoanDisbursement: 'Empréstimo',
   LoanPayment: 'Parcela de empréstimo',
   OverdraftInterest: 'Juros do cheque especial',
+  InvestmentApplication: 'Aplicação',
+  InvestmentRedemption: 'Resgate',
+  CardPurchase: 'Compra no cartão',
+  CardInvoicePayment: 'Pagamento de fatura',
+  CardInterest: 'Juros do cartão',
+  BoletoPayment: 'Boleto',
+  MobileRecharge: 'Recarga de celular',
 }
 
 const percentFormat = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 })

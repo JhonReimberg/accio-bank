@@ -5,9 +5,14 @@ import AuditPage from './pages/backoffice/AuditPage'
 import BackofficeLayout from './pages/backoffice/BackofficeLayout'
 import { CustomerPage, CustomersPage } from './pages/backoffice/CustomersPage'
 import DashboardPage from './pages/backoffice/DashboardPage'
+import FraudPage from './pages/backoffice/FraudPage'
 import KycQueuePage from './pages/backoffice/KycQueuePage'
 import PolicyPage from './pages/backoffice/PolicyPage'
+import CardsPage from './pages/cards/CardsPage'
+import InvoicePage from './pages/cards/InvoicePage'
 import CreditPage from './pages/credit/CreditPage'
+import InvestmentsPage from './pages/investments/InvestmentsPage'
+import PaymentsPage from './pages/payments/PaymentsPage'
 import LoansPage from './pages/credit/LoansPage'
 import OverdraftPage from './pages/credit/OverdraftPage'
 import { useAuth } from './lib/useAuth'
@@ -70,6 +75,7 @@ export default function App() {
             <Route path="/backoffice" element={<BackofficeLayout />}>
               <Route index element={<DashboardPage />} />
               <Route path="kyc" element={<KycQueuePage />} />
+              <Route path="antifraude" element={<FraudPage />} />
               <Route path="clientes" element={<CustomersPage />} />
               <Route path="clientes/:userId" element={<CustomerPage />} />
               <Route path="auditoria" element={<AuditPage />} />
@@ -94,6 +100,10 @@ export default function App() {
               <Route path="credito" element={<CreditPage />} />
               <Route path="credito/emprestimos" element={<LoansPage />} />
               <Route path="credito/cheque-especial" element={<OverdraftPage />} />
+              <Route path="cartoes" element={<CardsPage />} />
+              <Route path="cartoes/fatura" element={<InvoicePage />} />
+              <Route path="investimentos" element={<InvestmentsPage />} />
+              <Route path="pagamentos" element={<PaymentsPage />} />
             </Route>
           </Route>
           </Route>

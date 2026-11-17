@@ -1048,3 +1048,38 @@ meter {
     bottom: 24px;
   }
 }
+
+/* ---------- Phase 3: cards, payments ---------- */
+.text-right {
+  text-align: right;
+}
+.break {
+  overflow-wrap: anywhere;
+}
+.chip-active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}
+.bank-card {
+  display: grid;
+  gap: 18px;
+  max-width: 360px;
+  aspect-ratio: 1.586;
+  padding: 18px 20px;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(135deg, #0d5c54, #13201e);
+  align-content: space-between;
+}
+.bank-card-credit {
+  background: linear-gradient(135deg, #1d4f91, #13201e);
+}
+.bank-card-blocked {
+  filter: grayscale(1);
+  opacity: 0.7;
+}
+.bank-card-number {
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+}

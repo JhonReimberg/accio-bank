@@ -199,6 +199,25 @@ function Done({ result, target, onAgain }: { result: PixTransferResult | string;
     onSuccess: () => client.invalidateQueries({ queryKey: [...keys.pix, 'contacts'] }),
   })
 
+  if (typeof result !== 'string' && result.status === 'UnderReview')
+    return (
+      <Card className="stack center">
+        <p className="success-icon" aria-hidden>
+          ⏳
+        </p>
+        <h2>PIX em análise</h2>
+        <p className="big">{brl(result.amount)}</p>
+        <p>para {result.recipientName}</p>
+        <p className="muted">
+          Por segurança, este PIX vai passar por uma análise rápida. O valor fica reservado na sua conta e avisamos assim que ele for liberado
+          ou recusado.
+        </p>
+        <Button variant="ghost" onClick={onAgain}>
+          Voltar ao PIX
+        </Button>
+      </Card>
+    )
+
   if (typeof result === 'string')
     return (
       <Card className="stack center">

@@ -65,6 +65,7 @@ export default function PolicyPage() {
               <Field label="Juros de mora ao dia (%)" type="number" step="0.001" value={pct(draft.dailyLateInterestRate)} onChange={(e) => set('dailyLateInterestRate', frac(num(e.target.value)))} />
               <Field label="Cheque especial (% a.m.)" type="number" step="0.01" max={8} value={pct(draft.overdraftMonthlyRate)} onChange={(e) => set('overdraftMonthlyRate', frac(num(e.target.value)))} />
               <Field label="CDI (% a.a.)" type="number" step="0.01" value={pct(draft.cdiAnnualRate)} onChange={(e) => set('cdiAnnualRate', frac(num(e.target.value)))} />
+              <Field label="Empréstimo com garantia (% a.m.)" type="number" step="0.01" value={pct(draft.guaranteedMonthlyRate)} onChange={(e) => set('guaranteedMonthlyRate', frac(num(e.target.value)))} />
             </div>
           </Card>
           <Card className="stack">

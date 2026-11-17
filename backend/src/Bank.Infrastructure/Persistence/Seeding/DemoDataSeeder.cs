@@ -1,7 +1,11 @@
 using Bank.Application.Abstractions;
 using Bank.Domain.Accounts;
+using Bank.Domain.Boletos;
+using Bank.Domain.Cards;
 using Bank.Domain.Credit;
 using Bank.Domain.Customers;
+using Bank.Domain.Fraud;
+using Bank.Domain.Investments;
 using Bank.Domain.Ledger;
 using Bank.Domain.Pix;
 using Bank.Domain.Users;
@@ -97,8 +101,65 @@ public class DemoDataSeeder(BankDbContext db, ISecretHasher hasher, IFileStorage
             loan.RegisterPayment(installment, charge, tx.Id, firstDue, tx.CreatedAt);
         }));
 
+        // Phase 3. Carla: a goal caixinha that receives card round-ups, a CDB, a credit card with an installment purchase.
+        var custody = await db.Accounts.SingleAsync(a => a.Id == SystemAccounts.InvestmentCustody, ct);
+        var settlement = await db.Accounts.SingleAsync(a => a.Id == SystemAccounts.CardSettlement, ct);
+        var trip = Investment.Open(carla.Account.Id, InvestmentType.Caixinha, "Viagem para o Nordeste", 6_000, 1m, At(60));
+        trip.SetRoundUp(true);
+        var cdb = Investment.Open(carla.Account.Id, InvestmentType.Cdb, "CDB Liquidez Diária", null, 1m, At(60));
+        db.Investments.AddRange(trip, cdb);
+        void Invest(Investment investment, decimal amount, int daysAgo)
+        {
+            var at = At(daysAgo);
+            investment.Apply(amount, at);
+            Post(LedgerTransaction.Transfer(TransactionKind.InvestmentApplication, carla.Account, custody, amount,
+                $"Aplicação: {investment.Name}", $"Custódia: {investment.Name}", at));
+        }
+        history.Add((60, d => Invest(trip, 1_500, d)));
+        history.Add((30, d => Invest(trip, 800, d)));
+        history.Add((25, d => Invest(cdb, 3_000, d)));
+
+        var line = CreditLine.Open(carla.Account.Id, 6_000, dueDay: 10);
+        db.CreditLines.Add(line);
+        var creditCard = Card.Issue(carla.Account.Id, CardFunction.Credit, CardForm.Virtual, carla.Customer.FullName!, At(40), _random);
+        var debitCard = Card.Issue(carla.Account.Id, CardFunction.Debit, CardForm.Physical, carla.Customer.FullName!, At(40), _random);
+        db.Cards.AddRange(creditCard, debitCard);
+        void CreditPurchase(string merchant, decimal amount, int installments, int daysAgo)
+        {
+            var at = At(daysAgo);
+            var purchase = CardPurchase.Record(creditCard.Id, carla.Account.Id, merchant, amount, installments, true, at);
+            line.RegisterPurchase(purchase.Id, merchant, amount, installments, DateOnly.FromDateTime(Application.Common.BankTime.ToLocal(at)));
+            db.CardPurchases.Add(purchase);
+            Post(LedgerTransaction.Transfer(TransactionKind.CardPurchase, settlement, cash, amount,
+                $"A receber: compra no crédito em {merchant}", $"Repasse ao estabelecimento: {merchant}", at));
+        }
+        history.Add((8, d => CreditPurchase("Livraria Página Aberta", 459.90m, 3, d)));
+        history.Add((4, d => CreditPurchase("Restaurante Maré Alta", 186.40m, 1, d)));
+        history.Add((1, d =>
+        {
+            var at = At(d);
+            var purchase = CardPurchase.Record(debitCard.Id, carla.Account.Id, "Padaria Aurora", 18.40m, 1, false, at);
+            purchase.SetRoundUp(0.60m);
+            db.CardPurchases.Add(purchase);
+            Post(LedgerTransaction.Transfer(TransactionKind.CardPurchase, carla.Account, cash, 18.40m, "Compra no débito: Padaria Aurora",
+                "Repasse ao estabelecimento: Padaria Aurora", at));
+            Invest(trip, 0.60m, d);
+        }));
+        db.Boletos.Add(Boleto.Issue(carla.Account.Id, carla.Customer.FullName!, 280, today.AddDays(12), "Aula de fotografia", today, _now, _random));
+
         // Posted oldest first: running balances (BalanceAfter) depend on the order.
         foreach (var (daysAgo, post) in history.OrderByDescending(h => h.DaysAgo)) post(daysAgo);
+
+        // Diego: a PIX far above his average held by anti-fraud, waiting in the analyst's queue.
+        var diegoAverage = 80m; // his two previous PIX: 120 + 40
+        var reasons = new FraudPolicy().Evaluate(new FraudSignals(1_200, diegoAverage, 0, NewDevice: true));
+        var hold = diego.Account.PlaceHold(1_200, "Análise antifraude", At(0));
+        db.BalanceHolds.Add(hold);
+        var carlaKey = db.PixKeys.Local.First(k => k.AccountId == carla.Account.Id);
+        var review = FraudReview.Hold(diego.Account.Id, diego.User.Id, 1_200, carla.Account.Id, carla.Customer.FullName!, carlaKey.Type, carlaKey.Value,
+            "Notebook usado", hold.Id, reasons, At(0));
+        review.ClearDomainEvents();
+        db.FraudReviews.Add(review);
         // The 2nd installment is past due and his balance is short of it: overdue (raises the "Parcela em atraso" alert).
         loan!.MarkOverdue(today);
         db.PixSchedules.Add(PixSchedule.Create(carla.Account.Id, PixKeyType.Phone, "+5521987650002", 150, "Mesada",

@@ -65,6 +65,8 @@ export type PixTransferResult = {
   amount: number
   recipientName: string
   createdAt: string
+  /** UnderReview: held by anti-fraud; id is the review id and there is no endToEndId yet. */
+  status: 'Completed' | 'UnderReview'
 }
 
 export type PixTransferDetail = {
@@ -311,6 +313,103 @@ export type CreditPolicy = {
   dailyLateInterestRate: number
   overdraftMonthlyRate: number
   cdiAnnualRate: number
+  guaranteedMonthlyRate: number
   bands: ScoreBand[]
   updatedAt: string | null
+}
+
+// ---------- Phase 3: investments, cards, boletos, anti-fraud ----------
+
+export type Investment = {
+  id: string
+  type: 'Cdb' | 'Caixinha'
+  name: string
+  goal: number | null
+  cdiPercent: number
+  principal: number
+  value: number
+  income: number
+  blockedAmount: number
+  availableToRedeem: number
+  roundUpCardPurchases: boolean
+  goalProgress: number | null
+  createdAt: string
+}
+
+export type RedemptionPreview = { gross: number; income: number; iof: number; incomeTax: number; net: number }
+
+export type BankCard = {
+  id: string
+  function: 'Debit' | 'Credit'
+  form: 'Physical' | 'Virtual' | 'VirtualTemporary'
+  masked: string
+  holderName: string
+  expiry: string
+  status: 'Active' | 'Blocked' | 'Cancelled'
+  onlinePurchasesEnabled: boolean
+}
+
+export type CardDetails = { number: string; expiry: string; holderName: string }
+
+export type Purchase = { id: string; approved: boolean; declineReason: string | null; amount: number; installments: number; roundUp: number }
+
+export type InvoiceItem = { type: 'Purchase' | 'PreviousBalance' | 'RevolvingInterest' | 'LateFee'; description: string; amount: number }
+
+export type Invoice = {
+  id: string
+  closingDate: string
+  dueDate: string
+  status: 'Open' | 'Closed' | 'Paid' | 'Revolved'
+  total: number
+  paidAmount: number
+  remaining: number
+  minimumPayment: number
+  items: InvoiceItem[]
+}
+
+export type CreditLine = { limit: number; used: number; available: number; dueDay: number; invoices: Invoice[] }
+
+export type Boleto = {
+  id: string
+  amount: number
+  dueDate: string
+  description: string | null
+  digitableLine: string
+  barcode: string
+  status: 'Open' | 'Paid' | 'Cancelled'
+  createdAt: string
+  paidAt: string | null
+}
+
+export type BoletoInfo = { barcode: string; amount: number; dueDate: string | null; beneficiaryName: string; issuedByVela: boolean; overdue: boolean }
+
+export type BoletoPayment = {
+  id: string
+  beneficiaryName: string
+  amount: number
+  dueDate: string | null
+  scheduledFor: string
+  status: 'Scheduled' | 'Paid' | 'Failed' | 'Cancelled'
+  failureReason: string | null
+  createdAt: string
+  paidAt: string | null
+}
+
+export type FraudReview = {
+  id: string
+  amount: number
+  payeeName: string
+  description: string | null
+  reasons: string
+  status: 'Pending' | 'Approved' | 'Rejected'
+  createdAt: string
+  reviewedAt: string | null
+}
+
+export type FraudPolicy = {
+  enabled: boolean
+  averageMultiplier: number
+  averageRuleMinAmount: number
+  newDeviceAmount: number
+  velocityCount: number
 }

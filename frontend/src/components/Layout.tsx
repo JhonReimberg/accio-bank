@@ -4,10 +4,13 @@ import { useUnreadCount } from '../lib/queries'
 import { useRealtimeNotifications } from '../lib/realtime'
 
 const links = [
-  { to: '/', label: 'Início', icon: '⌂' },
-  { to: '/pix', label: 'PIX', icon: '◈' },
+  { to: '/', label: 'Início', icon: '⌂', tab: true },
+  { to: '/pix', label: 'PIX', icon: '◈', tab: true },
+  { to: '/cartoes', label: 'Cartões', icon: '▭', tab: true },
+  { to: '/investimentos', label: 'Investir', icon: '↑', tab: true },
+  { to: '/pagamentos', label: 'Pagamentos', icon: '▤' },
   { to: '/extrato', label: 'Extrato', icon: '≡' },
-  { to: '/credito', label: 'Crédito', icon: '$' },
+  { to: '/credito', label: 'Crédito', icon: '$', tab: true },
   { to: '/seguranca', label: 'Segurança', icon: '⚿' },
 ]
 
@@ -57,7 +60,7 @@ export default function Layout() {
       )}
 
       <nav className="tabbar tabbar-5" aria-label="Principal">
-        {links.map((l) => (
+        {links.filter((l) => l.tab).map((l) => (
           <NavLink key={l.to} to={l.to} end={l.to === '/'} className="tab">
             <span aria-hidden>{l.icon}</span>
             {l.label}
