@@ -71,7 +71,8 @@ public class FraudService(IBankDbContext db, ICurrentUser currentUser, PixDirect
         var payee = await directory.FindAsync(review.KeyValue, ct) ?? throw new NotFoundException("A chave do destinatário não existe mais.");
         var payerName = await db.Customers.Where(c => c.UserId == review.UserId).Select(c => c.FullName).SingleAsync(ct) ?? "";
         var reviewer = currentUser.UserId;
-        await payments.PayAsync(review.AccountId, payerName, payee, review.Amount, review.Description, ct,
+        // Limits were checked when the customer asked for the PIX; approving at night must not block a daytime payment.
+        await payments.PayAsync(review.AccountId, payerName, payee, review.Amount, review.Description, ct, checkLimits: false,
             prepare: async (payer, now) =>
             {
                 var tracked = await db.FraudReviews.SingleAsync(r => r.Id == reviewId, ct);

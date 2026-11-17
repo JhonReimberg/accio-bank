@@ -17,7 +17,7 @@ public class PixPayments(IBankDbContext db, LedgerPosting ledger, IAuditLog audi
     public async Task<PixTransfer> PayAsync(
         Guid payerAccountId, string payerName, PixRecipient payee, decimal amount, string? description, CancellationToken ct,
         Guid? scheduleId = null, DateOnly? occurrence = null, Action<PixTransfer>? alsoInTransaction = null,
-        Func<Domain.Accounts.Account, DateTime, Task<Action<PixTransfer>>>? prepare = null)
+        Func<Domain.Accounts.Account, DateTime, Task<Action<PixTransfer>>>? prepare = null, bool checkLimits = true)
     {
         if (payee.AccountId == payerAccountId)
             throw new DomainException("pix.same_account", "Não é possível fazer um PIX para a própria conta.");
@@ -31,7 +31,7 @@ public class PixPayments(IBankDbContext db, LedgerPosting ledger, IAuditLog audi
             payer.EnsureCanSend();
 
             // Runs with the payer row locked, so parallel PIX cannot each see the same "used" amount.
-            await EnsureWithinLimitAsync(payer, amount, now, ct);
+            if (checkLimits) await EnsureWithinLimitAsync(payer, amount, now, ct);
 
             var transaction = LedgerTransaction.Transfer(
                 TransactionKind.Pix, payer, accounts[payee.AccountId], amount,
