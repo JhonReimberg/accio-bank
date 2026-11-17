@@ -28,9 +28,12 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Accounts.Account", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<DateTime?>("ActivatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("activated_at");
 
                     b.Property<decimal>("Balance")
                         .HasPrecision(18, 2)
@@ -52,10 +55,27 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasColumnName("number")
                         .HasDefaultValueSql("nextval('account_numbers')");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StatusReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("status_reason");
+
                     b.Property<string>("SystemName")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("system_name");
+
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("tier");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -93,7 +113,9 @@ namespace Bank.Infrastructure.Persistence.Migrations
                             BlockedBalance = 0m,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Number = 1L,
+                            Status = "Active",
                             SystemName = "Caixa",
+                            Tier = "Basic",
                             Type = "System"
                         });
                 });
@@ -101,7 +123,6 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Accounts.BalanceHold", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -146,7 +167,6 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Auditing.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -203,10 +223,139 @@ namespace Bank.Infrastructure.Persistence.Migrations
                     b.ToTable("audit_logs", (string)null);
                 });
 
+            modelBuilder.Entity("Bank.Domain.Customers.Customer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("birth_date");
+
+                    b.Property<string>("Cpf")
+                        .HasMaxLength(11)
+                        .HasColumnType("character(11)")
+                        .HasColumnName("cpf")
+                        .IsFixedLength();
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FullName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("full_name");
+
+                    b.Property<string>("KycRejectionReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("kyc_rejection_reason");
+
+                    b.Property<string>("KycStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("kyc_status");
+
+                    b.Property<decimal?>("MonthlyIncome")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("monthly_income");
+
+                    b.Property<string>("Occupation")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("occupation");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("phone");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reviewed_at");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewed_by");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_customers");
+
+                    b.HasIndex("Cpf")
+                        .IsUnique()
+                        .HasDatabaseName("ix_customers_cpf")
+                        .HasFilter("cpf IS NOT NULL");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_customers_user_id");
+
+                    b.HasIndex("KycStatus", "SubmittedAt")
+                        .HasDatabaseName("ix_customers_kyc_status_submitted_at");
+
+                    b.ToTable("customers", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Customers.KycDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("content_type");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size_bytes");
+
+                    b.Property<string>("StoragePath")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("storage_path");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("uploaded_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_kyc_document");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_kyc_document_customer_id");
+
+                    b.ToTable("kyc_document", (string)null);
+                });
+
             modelBuilder.Entity("Bank.Domain.Ledger.LedgerEntry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -262,7 +411,6 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Ledger.LedgerTransaction", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -285,7 +433,6 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Notifications.Notification", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -325,7 +472,6 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Users.Device", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -375,7 +521,6 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Users.LoginAttempt", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -429,7 +574,6 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Users.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -491,7 +635,6 @@ namespace Bank.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Bank.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -686,6 +829,84 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_balance_holds_accounts_account_id");
                 });
 
+            modelBuilder.Entity("Bank.Domain.Customers.Customer", b =>
+                {
+                    b.HasOne("Bank.Domain.Users.User", null)
+                        .WithOne()
+                        .HasForeignKey("Bank.Domain.Customers.Customer", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_customers_users_user_id");
+
+                    b.OwnsOne("Bank.Domain.Customers.Address", "Address", b1 =>
+                        {
+                            b1.Property<Guid>("CustomerId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<string>("Cep")
+                                .IsRequired()
+                                .HasMaxLength(8)
+                                .HasColumnType("character varying(8)")
+                                .HasColumnName("address_cep");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("address_city");
+
+                            b1.Property<string>("Complement")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("address_complement");
+
+                            b1.Property<string>("Neighborhood")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("address_neighborhood");
+
+                            b1.Property<string>("Number")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("address_number");
+
+                            b1.Property<string>("State")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("address_state");
+
+                            b1.Property<string>("Street")
+                                .IsRequired()
+                                .HasMaxLength(150)
+                                .HasColumnType("character varying(150)")
+                                .HasColumnName("address_street");
+
+                            b1.HasKey("CustomerId");
+
+                            b1.ToTable("customers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CustomerId")
+                                .HasConstraintName("fk_customers_customers_id");
+                        });
+
+                    b.Navigation("Address");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Customers.KycDocument", b =>
+                {
+                    b.HasOne("Bank.Domain.Customers.Customer", null)
+                        .WithMany("Documents")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_kyc_document_customers_customer_id");
+                });
+
             modelBuilder.Entity("Bank.Domain.Ledger.LedgerEntry", b =>
                 {
                     b.HasOne("Bank.Domain.Accounts.Account", null)
@@ -731,6 +952,11 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_refresh_tokens_users_user_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Customers.Customer", b =>
+                {
+                    b.Navigation("Documents");
                 });
 
             modelBuilder.Entity("Bank.Domain.Ledger.LedgerTransaction", b =>

@@ -4,6 +4,7 @@ using Bank.Application.Common;
 using Bank.Domain.Accounts;
 using Bank.Domain.Auditing;
 using Bank.Domain.Common;
+using Bank.Domain.Customers;
 using Bank.Domain.Ledger;
 using Bank.Domain.Notifications;
 using Bank.Domain.Users;
@@ -24,6 +25,7 @@ public class BankDbContext(DbContextOptions<BankDbContext> options, TimeProvider
     public DbSet<Device> Devices => Set<Device>();
     public DbSet<LoginAttempt> LoginAttempts => Set<LoginAttempt>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+    public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<BalanceHold> BalanceHolds => Set<BalanceHold>();
     public DbSet<LedgerTransaction> LedgerTransactions => Set<LedgerTransaction>();
@@ -37,6 +39,11 @@ public class BankDbContext(DbContextOptions<BankDbContext> options, TimeProvider
     {
         modelBuilder.HasSequence<long>("account_numbers").StartsAt(10_000_001);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BankDbContext).Assembly);
+
+        // Ids are created by the domain (UUIDv7). Telling EF they are never generated makes a new child
+        // added through a navigation (e.g. customer.Documents) an INSERT instead of an UPDATE.
+        foreach (var entity in modelBuilder.Model.GetEntityTypes().Where(t => typeof(Entity).IsAssignableFrom(t.ClrType)))
+            modelBuilder.Entity(entity.ClrType).Property(nameof(Entity.Id)).ValueGeneratedNever();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

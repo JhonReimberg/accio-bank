@@ -61,6 +61,22 @@ public interface IQrCodeGenerator
     string PngBase64(string payload);
 }
 
+public record CepAddress(string Cep, string Street, string Neighborhood, string City, string State);
+
+/// <summary>Address lookup by CEP (postal code).</summary>
+public interface ICepLookup
+{
+    /// <summary>Null when the CEP does not exist or the provider is unavailable (the user then types the address).</summary>
+    Task<CepAddress?> LookupAsync(string cep, CancellationToken ct);
+}
+
+/// <summary>Private file storage (KYC documents, generated PDFs).</summary>
+public interface IFileStorage
+{
+    Task SaveAsync(string path, Stream content, CancellationToken ct);
+    Task<Stream> OpenReadAsync(string path, CancellationToken ct);
+}
+
 public interface IEmailSender
 {
     Task SendAsync(string to, string subject, string body, CancellationToken ct);

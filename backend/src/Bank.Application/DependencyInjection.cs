@@ -7,6 +7,7 @@ using Bank.Application.Auth;
 using Bank.Application.Jobs;
 using Bank.Application.Ledger;
 using Bank.Application.Notifications;
+using Bank.Application.Onboarding;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,6 +30,8 @@ public static class DependencyInjection
         services.AddScoped<AccountService>();
         services.AddScoped<NotificationService>();
         services.AddScoped<AdminService>();
+        services.AddScoped<OnboardingService>();
+        services.AddScoped<KycReviewService>();
         services.AddScoped<ReconcileLedgerJob>();
         AddDomainEventHandlers(services);
         return services;

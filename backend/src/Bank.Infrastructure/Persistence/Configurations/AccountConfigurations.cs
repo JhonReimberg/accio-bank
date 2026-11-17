@@ -34,6 +34,9 @@ internal class AccountConfiguration : IEntityTypeConfiguration<Account>
         b.HasIndex(a => a.UserId).IsUnique();
         b.HasIndex(a => a.Number).IsUnique();
         b.Property(a => a.Type).HasConversion<string>().HasMaxLength(20);
+        b.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+        b.Property(a => a.Tier).HasConversion<string>().HasMaxLength(20);
+        b.Property(a => a.StatusReason).HasMaxLength(200);
         b.Property(a => a.Number).HasDefaultValueSql("nextval('account_numbers')");
         b.Property(a => a.SystemName).HasMaxLength(100);
         b.Property(a => a.Balance).HasPrecision(18, 2);
@@ -46,6 +49,8 @@ internal class AccountConfiguration : IEntityTypeConfiguration<Account>
             Type = AccountType.System,
             Number = 1L,
             SystemName = "Caixa",
+            Status = AccountStatus.Active,
+            Tier = AccountTier.Basic,
             Balance = 0m,
             BlockedBalance = 0m,
             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),

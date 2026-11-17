@@ -53,6 +53,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapAuthEndpoints();
 app.MapAccountEndpoints();
+app.MapOnboardingEndpoints();
 app.MapSecurityEndpoints();
 app.MapNotificationEndpoints();
 app.MapAdminEndpoints();

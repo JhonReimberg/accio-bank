@@ -66,7 +66,8 @@ public class PlatformTests(BankApiFactory factory)
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BankDbContext>();
         var aliceId = await db.Users.Where(u => u.Email == alice.Email).Select(u => u.Id).SingleAsync();
-        var actions = await db.AuditLogs.Where(a => a.ActorUserId == aliceId).OrderBy(a => a.CreatedAt).Select(a => a.Action).ToListAsync();
+        var actions = await db.AuditLogs.Where(a => a.ActorUserId == aliceId && !a.Action.StartsWith("onboarding."))
+            .OrderBy(a => a.CreatedAt).Select(a => a.Action).ToListAsync();
         Assert.Equal(
             ["auth.registered", "auth.signed_in", "security.pin_created", "account.deposit", "account.transfer", "auth.login_failed"],
             actions);
@@ -81,10 +82,9 @@ public class PlatformTests(BankApiFactory factory)
 
         var page = await TestUsers.EventuallyAsync(
             () => bob.Client.GetFromJsonAsync<PagedResult<NotificationResponse>>("/api/notifications")!,
-            p => p!.TotalCount > 0);
+            p => p!.Items.Any(n => n.Title == "Dinheiro na conta"));
 
-        var notification = Assert.Single(page!.Items);
-        Assert.Equal("Dinheiro na conta", notification.Title);
+        var notification = Assert.Single(page!.Items, n => n.Title == "Dinheiro na conta");
         Assert.Contains("R$ 12,50", notification.Body);
     }
 

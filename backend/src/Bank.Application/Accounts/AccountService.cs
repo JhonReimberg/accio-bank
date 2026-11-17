@@ -12,7 +12,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Bank.Application.Accounts;
 
 public record AccountResponse(
-    string Name, string Email, string Number, decimal AvailableBalance, decimal BlockedBalance, decimal TotalBalance);
+    string Name, string Email, string Number, AccountStatus Status, AccountTier Tier,
+    decimal AvailableBalance, decimal BlockedBalance, decimal TotalBalance);
 
 public record TransactionResponse(
     Guid Id, TransactionKind Kind, decimal Amount, string Description, decimal BalanceAfter, DateTime CreatedAt);
@@ -57,7 +58,7 @@ public class AccountService(
                 join u in db.Users on a.UserId equals u.Id
                 where a.UserId == userId
                 select new AccountResponse(
-                    u.Name, u.Email, a.Number.ToString(), a.Balance - a.BlockedBalance, a.BlockedBalance, a.Balance))
+                    u.Name, u.Email, a.Number.ToString(), a.Status, a.Tier, a.Balance - a.BlockedBalance, a.BlockedBalance, a.Balance))
             .SingleOrDefaultAsync(ct) ?? throw new UnauthorizedException("Conta não encontrada.");
     }
 

@@ -1,5 +1,6 @@
 using Bank.Domain.Accounts;
 using Bank.Domain.Auditing;
+using Bank.Domain.Customers;
 using Bank.Domain.Ledger;
 using Bank.Domain.Notifications;
 using Bank.Domain.Users;
@@ -14,6 +15,7 @@ public interface IBankDbContext
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<Device> Devices { get; }
     DbSet<LoginAttempt> LoginAttempts { get; }
+    DbSet<Customer> Customers { get; }
     DbSet<Account> Accounts { get; }
     DbSet<BalanceHold> BalanceHolds { get; }
     DbSet<LedgerTransaction> LedgerTransactions { get; }

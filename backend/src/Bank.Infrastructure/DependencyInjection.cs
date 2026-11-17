@@ -1,6 +1,9 @@
 using Bank.Application.Abstractions;
 using Bank.Application.Auth;
+using Bank.Application.Onboarding;
 using Bank.Infrastructure.Email;
+using Bank.Infrastructure.External;
+using Bank.Infrastructure.Storage;
 using Bank.Infrastructure.Idempotency;
 using Bank.Infrastructure.Outbox;
 using Bank.Infrastructure.Persistence;
@@ -32,6 +35,14 @@ public static class DependencyInjection
         services.AddSingleton<ISecretProtector, SecretProtector>();
         services.AddSingleton<IQrCodeGenerator, QrCodeGenerator>();
         services.AddSingleton(configuration.GetSection("Sessions").Get<SessionOptions>() ?? new SessionOptions());
+        services.AddSingleton(configuration.GetSection("Kyc").Get<KycOptions>() ?? new KycOptions());
+        services.AddSingleton(configuration.GetSection("Storage").Get<StorageOptions>() ?? new StorageOptions());
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        services.AddHttpClient<ICepLookup, ViaCepLookup>(c =>
+        {
+            c.BaseAddress = new Uri(configuration["ViaCep:BaseUrl"] ?? "https://viacep.com.br/");
+            c.Timeout = TimeSpan.FromSeconds(3);
+        });
         services.AddSingleton(TimeProvider.System);
         services.AddDataProtection()
             .SetApplicationName("vela-bank")

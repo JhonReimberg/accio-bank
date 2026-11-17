@@ -10,6 +10,8 @@ namespace Bank.Application.Admin;
 
 public record PlaceHoldRequest(decimal Amount, string Reason);
 
+public record AccountStatusRequest(string Reason);
+
 public record HoldResponse(Guid Id, Guid AccountId, decimal Amount, string Reason, HoldStatus Status, DateTime CreatedAt);
 
 public record AuditLogQuery(Guid? ActorUserId, string? Action, string? EntityId, DateTime? From, DateTime? To, int Page = 1, int PageSize = 20);
@@ -67,6 +69,22 @@ public class AdminService(
     }
 
     public Task<ReconciliationReport> ReconcileAsync(CancellationToken ct) => reconciliation.RunAsync(ct);
+
+    public Task BlockAccountAsync(Guid accountId, AccountStatusRequest req, CancellationToken ct) =>
+        ChangeStatusAsync(accountId, "admin.account.blocked", a => a.Block(req.Reason.Trim()), ct);
+
+    public Task UnblockAccountAsync(Guid accountId, CancellationToken ct) =>
+        ChangeStatusAsync(accountId, "admin.account.unblocked", a => a.Unblock(), ct);
+
+    private async Task ChangeStatusAsync(Guid accountId, string action, Action<Account> change, CancellationToken ct)
+    {
+        var account = await db.Accounts.SingleOrDefaultAsync(a => a.Id == accountId && a.Type == AccountType.Customer, ct)
+            ?? throw new NotFoundException("Conta não encontrada.");
+        var before = new { account.Status, account.StatusReason };
+        change(account);
+        audit.Record(action, nameof(Account), account.Id, before, new { account.Status, account.StatusReason });
+        await db.SaveChangesAsync(ct);
+    }
 
     public Task<PagedResult<AuditLogResponse>> SearchAuditLogsAsync(AuditLogQuery q, CancellationToken ct)
     {

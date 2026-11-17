@@ -1,5 +1,8 @@
 using Bank.Api.Infrastructure;
+using Bank.Application.Abstractions;
 using Bank.Application.Admin;
+using Bank.Application.Onboarding;
+using Bank.Domain.Customers;
 
 namespace Bank.Api.Endpoints;
 
@@ -20,5 +23,37 @@ public static class AdminEndpoints
         g.MapGet("/ledger/reconciliation", async (AdminService admin, CancellationToken ct) =>
                 TypedResults.Ok(await admin.ReconcileAsync(ct)))
             .RequireAuthorization(Policies.Admin);
+
+        g.MapPost("/accounts/{accountId:guid}/block", async (Guid accountId, AccountStatusRequest req, AdminService admin, CancellationToken ct) =>
+        {
+            await admin.BlockAccountAsync(accountId, req, ct);
+            return TypedResults.NoContent();
+        });
+        g.MapPost("/accounts/{accountId:guid}/unblock", async (Guid accountId, AdminService admin, CancellationToken ct) =>
+        {
+            await admin.UnblockAccountAsync(accountId, ct);
+            return TypedResults.NoContent();
+        });
+
+        var kyc = g.MapGroup("/kyc");
+        kyc.MapGet("/", async (KycReviewService review, CancellationToken ct, KycStatus status = KycStatus.PendingReview, int page = 1, int pageSize = 20) =>
+            TypedResults.Ok(await review.ListAsync(status, page, pageSize, ct)));
+        kyc.MapGet("/{customerId:guid}", async (Guid customerId, KycReviewService review, CancellationToken ct) =>
+            TypedResults.Ok(await review.GetAsync(customerId, ct)));
+        kyc.MapGet("/{customerId:guid}/documents/{documentId:guid}", async (Guid customerId, Guid documentId, KycReviewService review, CancellationToken ct) =>
+        {
+            var file = await review.OpenDocumentAsync(customerId, documentId, ct);
+            return TypedResults.File(file.Content, file.ContentType, file.FileName);
+        });
+        kyc.MapPost("/{customerId:guid}/approve", async (Guid customerId, KycReviewService review, ICurrentUser user, CancellationToken ct) =>
+        {
+            await review.ApproveAsync(customerId, user.UserId, ct);
+            return TypedResults.NoContent();
+        });
+        kyc.MapPost("/{customerId:guid}/reject", async (Guid customerId, RejectKycRequest req, KycReviewService review, ICurrentUser user, CancellationToken ct) =>
+        {
+            await review.RejectAsync(customerId, user.UserId, req, ct);
+            return TypedResults.NoContent();
+        });
     }
 }

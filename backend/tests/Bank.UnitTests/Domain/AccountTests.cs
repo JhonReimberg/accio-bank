@@ -11,6 +11,7 @@ public class AccountTests
     internal static Account Customer(decimal balance = 0)
     {
         var account = Account.OpenCustomer(Guid.NewGuid(), Now);
+        account.Activate(AccountTier.Basic, Now);
         if (balance > 0) Deposit(account, balance);
         return account;
     }
@@ -49,6 +50,46 @@ public class AccountTests
         Assert.Equal(100m, account.AvailableBalance);
         Assert.Throws<DomainException>(() => account.ReleaseHold(hold, Now));
     }
+
+    [Fact]
+    public void Accounts_under_review_cannot_send_or_receive()
+    {
+        var pending = Account.OpenCustomer(Guid.NewGuid(), Now);
+        Assert.Equal("account.not_active", Assert.Throws<DomainException>(() => Deposit(pending, 10)).Code);
+        Assert.Equal("account.pending_review", Assert.Throws<DomainException>(() =>
+            LedgerTransaction.Transfer(TransactionKind.InternalTransfer, pending, Customer(), 1, "x", "y", Now)).Code);
+    }
+
+    [Fact]
+    public void Blocked_accounts_can_receive_but_not_send()
+    {
+        var account = Customer(100);
+        account.Block("Suspeita de fraude");
+        Deposit(account, 10);
+        Assert.Equal(110m, account.Balance);
+        Assert.Equal("account.blocked", Assert.Throws<DomainException>(() =>
+            LedgerTransaction.Transfer(TransactionKind.InternalTransfer, account, Customer(), 1, "x", "y", Now)).Code);
+        account.Unblock();
+        LedgerTransaction.Transfer(TransactionKind.InternalTransfer, account, Customer(), 1, "x", "y", Now);
+    }
+
+    [Fact]
+    public void Only_empty_accounts_can_be_closed()
+    {
+        var account = Customer(1);
+        Assert.Throws<DomainException>(() => account.Close("Pedido do cliente"));
+        LedgerTransaction.Transfer(TransactionKind.InternalTransfer, account, Customer(), 1, "x", "y", Now);
+        account.Close("Pedido do cliente");
+        Assert.Equal(AccountStatus.Closed, account.Status);
+    }
+
+    [Theory]
+    [InlineData(1_500, AccountTier.Basic)]
+    [InlineData(4_999.99, AccountTier.Basic)]
+    [InlineData(5_000, AccountTier.Plus)]
+    [InlineData(15_000, AccountTier.Premium)]
+    public void Tier_follows_declared_income(decimal income, AccountTier expected) =>
+        Assert.Equal(expected, Account.TierForIncome(income));
 
     [Fact]
     public void Cannot_hold_more_than_available()

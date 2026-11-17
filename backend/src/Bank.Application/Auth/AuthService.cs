@@ -6,6 +6,7 @@ using Bank.Application.Auditing;
 using Bank.Application.Common;
 using Bank.Domain.Accounts;
 using Bank.Domain.Common;
+using Bank.Domain.Customers;
 using Bank.Domain.Users;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -86,6 +87,7 @@ public class AuthService(
         user.SetPasswordHash(hasher.Hash(req.Password));
         db.Users.Add(user);
         db.Accounts.Add(Account.OpenCustomer(user.Id, now));
+        db.Customers.Add(Customer.Start(user.Id, now));
         var device = Device.Register(user.Id, DeviceKey(), DeviceNames.FromUserAgent(request.UserAgent), request.IpAddress, now, alertOwner: false);
         db.Devices.Add(device);
         audit.Record("auth.registered", nameof(User), user.Id, after: new { user.Email, user.Role }, actorUserId: user.Id);
