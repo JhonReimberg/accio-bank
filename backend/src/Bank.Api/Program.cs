@@ -2,6 +2,7 @@ using Bank.Api.Endpoints;
 using Bank.Api.Infrastructure;
 using Bank.Application;
 using Bank.Application.Common;
+using Bank.Application.Credit;
 using Bank.Application.Jobs;
 using Bank.Application.Pix;
 using Bank.Infrastructure;
@@ -55,6 +56,7 @@ if (app.Environment.IsDevelopment())
 app.MapAuthEndpoints();
 app.MapAccountEndpoints();
 app.MapPixEndpoints();
+app.MapCreditEndpoints();
 app.MapOnboardingEndpoints();
 app.MapSecurityEndpoints();
 app.MapNotificationEndpoints();
@@ -79,6 +81,9 @@ if (Bank.Infrastructure.DependencyInjection.JobsEnabled(app.Configuration))
     jobs.AddOrUpdate<ReconcileLedgerJob>("reconcile-ledger", j => j.RunAsync(CancellationToken.None), "0 3 * * *", brasilia);
     // Every 10 minutes so a PIX scheduled for "today" goes out soon after it is created (good for the demo).
     jobs.AddOrUpdate<ExecuteScheduledPixJob>("scheduled-pix", j => j.RunAsync(CancellationToken.None), "*/10 * * * *", brasilia);
+    jobs.AddOrUpdate<RecalculateScoresJob>("recalculate-scores", j => j.RunAsync(CancellationToken.None), "0 2 * * *", brasilia);
+    jobs.AddOrUpdate<LoanCollectionJob>("loan-collection", j => j.RunAsync(CancellationToken.None), "0 8 * * *", brasilia);
+    jobs.AddOrUpdate<OverdraftInterestJob>("overdraft-interest", j => j.RunAsync(CancellationToken.None), "55 23 * * *", brasilia);
 }
 
 app.Run();

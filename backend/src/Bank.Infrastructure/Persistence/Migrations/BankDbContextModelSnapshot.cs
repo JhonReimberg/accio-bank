@@ -55,6 +55,11 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasColumnName("number")
                         .HasDefaultValueSql("nextval('account_numbers')");
 
+                    b.Property<decimal>("OverdraftLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("overdraft_limit");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -100,9 +105,9 @@ namespace Bank.Infrastructure.Persistence.Migrations
 
                     b.ToTable("accounts", null, t =>
                         {
-                            t.HasCheckConstraint("ck_accounts_blocked_balance_valid", "blocked_balance >= 0 AND (type <> 'Customer' OR blocked_balance <= balance)");
+                            t.HasCheckConstraint("ck_accounts_blocked_balance_valid", "blocked_balance >= 0 AND overdraft_limit >= 0 AND (type <> 'Customer' OR blocked_balance <= balance + overdraft_limit)");
 
-                            t.HasCheckConstraint("ck_accounts_customer_balance_non_negative", "type <> 'Customer' OR balance >= 0");
+                            t.HasCheckConstraint("ck_accounts_customer_balance_within_overdraft", "type <> 'Customer' OR balance >= -overdraft_limit");
                         });
 
                     b.HasData(
@@ -113,8 +118,48 @@ namespace Bank.Infrastructure.Persistence.Migrations
                             BlockedBalance = 0m,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Number = 1L,
+                            OverdraftLimit = 0m,
                             Status = "Active",
                             SystemName = "Caixa",
+                            Tier = "Basic",
+                            Type = "System"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Balance = 0m,
+                            BlockedBalance = 0m,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Number = 2L,
+                            OverdraftLimit = 0m,
+                            Status = "Active",
+                            SystemName = "Carteira de crédito",
+                            Tier = "Basic",
+                            Type = "System"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000003"),
+                            Balance = 0m,
+                            BlockedBalance = 0m,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Number = 3L,
+                            OverdraftLimit = 0m,
+                            Status = "Active",
+                            SystemName = "Receitas de crédito",
+                            Tier = "Basic",
+                            Type = "System"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000004"),
+                            Balance = 0m,
+                            BlockedBalance = 0m,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Number = 4L,
+                            OverdraftLimit = 0m,
+                            Status = "Active",
+                            SystemName = "IOF a recolher",
                             Tier = "Basic",
                             Type = "System"
                         });
@@ -221,6 +266,288 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_audit_logs_entity_id_created_at");
 
                     b.ToTable("audit_logs", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Credit.CreditPolicy", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("CdiAnnualRate")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("numeric(10,6)")
+                        .HasColumnName("cdi_annual_rate");
+
+                    b.Property<decimal>("DailyLateInterestRate")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("numeric(10,6)")
+                        .HasColumnName("daily_late_interest_rate");
+
+                    b.Property<decimal>("LateFeeRate")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("numeric(10,6)")
+                        .HasColumnName("late_fee_rate");
+
+                    b.Property<decimal>("MaxIncomeCommitment")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("numeric(10,6)")
+                        .HasColumnName("max_income_commitment");
+
+                    b.Property<int>("MaxInstallments")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_installments");
+
+                    b.Property<int>("MinAccountAgeDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("min_account_age_days");
+
+                    b.Property<int>("MinInstallments")
+                        .HasColumnType("integer")
+                        .HasColumnName("min_installments");
+
+                    b.Property<decimal>("MinLoanAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("min_loan_amount");
+
+                    b.Property<decimal>("MinMovement30Days")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("min_movement30days");
+
+                    b.Property<int>("MinScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("min_score");
+
+                    b.Property<decimal>("OverdraftMonthlyRate")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("numeric(10,6)")
+                        .HasColumnName("overdraft_monthly_rate");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_credit_policies");
+
+                    b.ToTable("credit_policies", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_credit_policies_singleton", "id = 1");
+                        });
+                });
+
+            modelBuilder.Entity("Bank.Domain.Credit.CreditScore", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CalculatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("calculated_at");
+
+                    b.Property<string>("Factors")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("factors");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("integer")
+                        .HasColumnName("score");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_credit_scores");
+
+                    b.HasIndex("UserId", "CalculatedAt")
+                        .HasDatabaseName("ix_credit_scores_user_id_calculated_at");
+
+                    b.ToTable("credit_scores", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Credit.Loan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("CetMonthly")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("numeric(10,6)")
+                        .HasColumnName("cet_monthly");
+
+                    b.Property<decimal>("CetYearly")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("numeric(10,6)")
+                        .HasColumnName("cet_yearly");
+
+                    b.Property<DateTime>("ContractedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("contracted_at");
+
+                    b.Property<Guid>("DisbursementTransactionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("disbursement_transaction_id");
+
+                    b.Property<decimal>("InstallmentAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("installment_amount");
+
+                    b.Property<int>("InstallmentCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("installment_count");
+
+                    b.Property<decimal>("Iof")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("iof");
+
+                    b.Property<decimal>("MonthlyRate")
+                        .HasPrecision(10, 6)
+                        .HasColumnType("numeric(10,6)")
+                        .HasColumnName("monthly_rate");
+
+                    b.Property<decimal>("NetAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("net_amount");
+
+                    b.Property<int>("ScoreAtContract")
+                        .HasColumnType("integer")
+                        .HasColumnName("score_at_contract");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_loans");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_loans_account_id");
+
+                    b.HasIndex("DisbursementTransactionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_loans_disbursement_transaction_id");
+
+                    b.HasIndex("UserId", "Status")
+                        .HasDatabaseName("ix_loans_user_id_status");
+
+                    b.ToTable("loans", (string)null);
+                });
+
+            modelBuilder.Entity("Bank.Domain.Credit.LoanInstallment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("BalanceAfter")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("balance_after");
+
+                    b.Property<decimal>("Discount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("discount");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<decimal>("Interest")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("interest");
+
+                    b.Property<decimal>("LateFee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("late_fee");
+
+                    b.Property<decimal>("LateInterest")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("late_interest");
+
+                    b.Property<Guid>("LoanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("loan_id");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer")
+                        .HasColumnName("number");
+
+                    b.Property<decimal?>("PaidAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("paid_amount");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_at");
+
+                    b.Property<Guid?>("PaymentTransactionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_transaction_id");
+
+                    b.Property<decimal>("Principal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("principal");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<bool>("WasLate")
+                        .HasColumnType("boolean")
+                        .HasColumnName("was_late");
+
+                    b.HasKey("Id")
+                        .HasName("pk_loan_installments");
+
+                    b.HasIndex("LoanId", "Number")
+                        .IsUnique()
+                        .HasDatabaseName("ix_loan_installments_loan_id_number");
+
+                    b.HasIndex("Status", "DueDate")
+                        .HasDatabaseName("ix_loan_installments_status_due_date");
+
+                    b.ToTable("loan_installments", (string)null);
                 });
 
             modelBuilder.Entity("Bank.Domain.Customers.Customer", b =>
@@ -1168,6 +1495,70 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_balance_holds_accounts_account_id");
                 });
 
+            modelBuilder.Entity("Bank.Domain.Credit.CreditPolicy", b =>
+                {
+                    b.OwnsMany("Bank.Domain.Credit.ScoreBand", "Bands", b1 =>
+                        {
+                            b1.Property<int>("CreditPolicyId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("MinScore");
+
+                            b1.Property<decimal>("MonthlyRate")
+                                .HasPrecision(10, 6);
+
+                            b1.Property<decimal>("OverdraftLimit");
+
+                            b1.Property<decimal>("PreApprovedIncomeMultiplier");
+
+                            b1.HasKey("CreditPolicyId", "__synthesizedOrdinal");
+
+                            b1.ToTable("credit_policies");
+
+                            b1
+                                .ToJson("bands")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CreditPolicyId")
+                                .HasConstraintName("fk_credit_policies_credit_policies_credit_policy_id");
+                        });
+
+                    b.Navigation("Bands");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Credit.CreditScore", b =>
+                {
+                    b.HasOne("Bank.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_credit_scores_users_user_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Credit.Loan", b =>
+                {
+                    b.HasOne("Bank.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_loans_accounts_account_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Credit.LoanInstallment", b =>
+                {
+                    b.HasOne("Bank.Domain.Credit.Loan", null)
+                        .WithMany("Installments")
+                        .HasForeignKey("LoanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_loan_installments_loans_loan_id");
+                });
+
             modelBuilder.Entity("Bank.Domain.Customers.Customer", b =>
                 {
                     b.HasOne("Bank.Domain.Users.User", null)
@@ -1358,6 +1749,11 @@ namespace Bank.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_refresh_tokens_users_user_id");
+                });
+
+            modelBuilder.Entity("Bank.Domain.Credit.Loan", b =>
+                {
+                    b.Navigation("Installments");
                 });
 
             modelBuilder.Entity("Bank.Domain.Customers.Customer", b =>

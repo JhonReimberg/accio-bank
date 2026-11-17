@@ -4,6 +4,7 @@ using Bank.Application.Accounts;
 using Bank.Application.Admin;
 using Bank.Application.Auditing;
 using Bank.Application.Auth;
+using Bank.Application.Credit;
 using Bank.Application.Jobs;
 using Bank.Application.Ledger;
 using Bank.Application.Notifications;
@@ -43,6 +44,23 @@ public static class DependencyInjection
         services.AddScoped<PixScheduleRunner>();
         services.AddScoped<ExecuteScheduledPixJob>();
         services.AddScoped<IReceiptDetailsProvider, PixReceiptDetails>();
+
+        services.AddScoped<CreditData>();
+        services.AddScoped<ScoreService>();
+        services.AddScoped<CreditService>();
+        services.AddScoped<BackofficeService>();
+        services.AddScoped<RecalculateScoresJob>();
+        services.AddScoped<LoanCollectionJob>();
+        services.AddScoped<OverdraftInterestJob>();
+        // The eligibility rules share one per-request profile (loaded once, read by all rules).
+        services.AddScoped<EligibilityContext>();
+        services.AddScoped<IEligibilityContext>(sp => sp.GetRequiredService<EligibilityContext>());
+        services.AddScoped<IEligibilityRule, ActiveAccountRule>();
+        services.AddScoped<IEligibilityRule, AccountAgeRule>();
+        services.AddScoped<IEligibilityRule, MinimumMovementRule>();
+        services.AddScoped<IEligibilityRule, NoOverdueRule>();
+        services.AddScoped<IEligibilityRule, MinimumScoreRule>();
+        services.AddScoped<IEligibilityRule, IncomeCommitmentRule>();
         AddDomainEventHandlers(services);
         return services;
     }

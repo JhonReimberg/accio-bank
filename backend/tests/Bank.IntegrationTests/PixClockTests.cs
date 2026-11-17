@@ -7,14 +7,23 @@ using Bank.Domain.Pix;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Time.Testing;
 
 namespace Bank.IntegrationTests;
+
+/// <summary>A business clock tests can move freely, forwards or backwards (each test sets its own scenario time).</summary>
+public class TestClock(DateTimeOffset start) : TimeProvider
+{
+    private DateTimeOffset _now = start;
+
+    public override DateTimeOffset GetUtcNow() => _now;
+
+    public void SetUtcNow(DateTimeOffset value) => _now = value;
+}
 
 /// <summary>Business clock under test control: starts on a Monday, 10:00 in Brasília.</summary>
 public class FakeClockFactory : BankApiFactory
 {
-    public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(BankTime.ToUtc(new DateTime(2026, 11, 16, 10, 0, 0)), TimeSpan.Zero));
+    public TestClock Clock { get; } = new(new DateTimeOffset(BankTime.ToUtc(new DateTime(2026, 11, 16, 10, 0, 0)), TimeSpan.Zero));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -24,10 +33,12 @@ public class FakeClockFactory : BankApiFactory
 
     public void SetBrasiliaTime(DateTime local) => Clock.SetUtcNow(new DateTimeOffset(BankTime.ToUtc(local), TimeSpan.Zero));
 
-    public async Task RunScheduledPixJobAsync()
+    public Task RunScheduledPixJobAsync() => RunJobAsync<ExecuteScheduledPixJob>(j => j.RunAsync(CancellationToken.None));
+
+    public async Task RunJobAsync<TJob>(Func<TJob, Task> run) where TJob : notnull
     {
         using var scope = Services.CreateScope();
-        await scope.ServiceProvider.GetRequiredService<ExecuteScheduledPixJob>().RunAsync(CancellationToken.None);
+        await run(scope.ServiceProvider.GetRequiredService<TJob>());
     }
 }
 

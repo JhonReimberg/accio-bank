@@ -67,7 +67,7 @@ public class PixLimitSettings
         var max = PixLimitPolicy.Maximum(tier);
         if (requested.Daytime > max.Daytime || requested.Nighttime > max.Nighttime)
             throw new DomainException("pix.limit_above_tier",
-                $"O máximo para sua conta é {max.Daytime:N2} de dia e {max.Nighttime:N2} à noite.");
+                $"O máximo para sua conta é {Money.Brl(max.Daytime)} de dia e {Money.Brl(max.Nighttime)} à noite.");
 
         var current = Current(now);
         // Decreases apply now; increases wait. A new request replaces any pending one.
@@ -86,7 +86,7 @@ public class PixLimitSettings
         var limit = period.IsNight ? limits.Nighttime : limits.Daytime;
         if (alreadySentInPeriod + amount > limit)
             throw new DomainException(period.IsNight ? "pix.night_limit" : "pix.day_limit",
-                $"Valor acima do seu limite {(period.IsNight ? "noturno" : "diurno")}. Disponível agora: {Math.Max(0, limit - alreadySentInPeriod):N2}.");
+                $"Valor acima do seu limite {(period.IsNight ? "noturno" : "diurno")}. Disponível agora: {Money.Brl(Math.Max(0, limit - alreadySentInPeriod))}.");
     }
 }
 

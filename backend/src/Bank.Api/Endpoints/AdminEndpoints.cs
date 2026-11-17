@@ -2,6 +2,7 @@ using Bank.Api.Infrastructure;
 using Bank.Application.Abstractions;
 using Bank.Application.Admin;
 using Bank.Application.Onboarding;
+using Bank.Domain.Credit;
 using Bank.Domain.Customers;
 
 namespace Bank.Api.Endpoints;
@@ -34,6 +35,21 @@ public static class AdminEndpoints
             await admin.UnblockAccountAsync(accountId, ct);
             return TypedResults.NoContent();
         });
+
+        g.MapGet("/dashboard", async (BackofficeService backoffice, CancellationToken ct) => TypedResults.Ok(await backoffice.DashboardAsync(ct)));
+        g.MapGet("/customers", async (BackofficeService backoffice, CancellationToken ct, string? search, int page = 1, int pageSize = 20) =>
+            TypedResults.Ok(await backoffice.SearchCustomersAsync(search, page, pageSize, ct)));
+        g.MapGet("/customers/{userId:guid}", async (Guid userId, BackofficeService backoffice, CancellationToken ct) =>
+            TypedResults.Ok(await backoffice.GetCustomerAsync(userId, ct)));
+        g.MapPut("/accounts/{accountId:guid}/overdraft-limit", async (Guid accountId, SetOverdraftLimitRequest req, BackofficeService backoffice, CancellationToken ct) =>
+        {
+            await backoffice.SetOverdraftLimitAsync(accountId, req, ct);
+            return TypedResults.NoContent();
+        });
+        g.MapGet("/credit/policy", async (BackofficeService backoffice, CancellationToken ct) => TypedResults.Ok(await backoffice.GetPolicyAsync(ct)));
+        g.MapPut("/credit/policy", async (CreditPolicyValues values, BackofficeService backoffice, CancellationToken ct) =>
+                TypedResults.Ok(await backoffice.UpdatePolicyAsync(values, ct)))
+            .RequireAuthorization(Policies.Admin);
 
         var kyc = g.MapGroup("/kyc");
         kyc.MapGet("/", async (KycReviewService review, CancellationToken ct, KycStatus status = KycStatus.PendingReview, int page = 1, int pageSize = 20) =>

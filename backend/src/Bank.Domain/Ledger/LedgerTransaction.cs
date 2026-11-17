@@ -11,6 +11,9 @@ public enum TransactionKind
     InternalTransfer,
     Pix,
     PixRefund,
+    LoanDisbursement,
+    LoanPayment,
+    OverdraftInterest,
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter<EntryDirection>))]
@@ -59,6 +62,19 @@ public class LedgerTransaction : Entity
             if (p.Direction == EntryDirection.Credit && p.Account.Type == AccountType.Customer)
                 tx.Raise(new FundsCredited(p.Account.Id, tx.Id, kind, p.Amount, p.Description));
         }
+        return tx;
+    }
+
+    /// <summary>A charge the bank takes from a customer (overdraft interest), limited to what the overdraft allows.</summary>
+    public static LedgerTransaction? Charge(TransactionKind kind, Account customer, Account revenue, decimal amount, string description, DateTime now)
+    {
+        Money.EnsureValidAmount(amount);
+        var charged = customer.ApplyCharge(amount);
+        if (charged == 0) return null;
+        revenue.ApplyCredit(charged);
+        var tx = new LedgerTransaction { Kind = kind, CreatedAt = now };
+        tx._entries.Add(LedgerEntry.Create(tx.Id, customer.Id, EntryDirection.Debit, charged, customer.Balance, description, now));
+        tx._entries.Add(LedgerEntry.Create(tx.Id, revenue.Id, EntryDirection.Credit, charged, revenue.Balance, description, now));
         return tx;
     }
 

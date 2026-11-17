@@ -26,9 +26,10 @@ internal class AccountConfiguration : IEntityTypeConfiguration<Account>
     {
         b.ToTable(t =>
         {
-            // Defense in depth: even a bug in the application cannot overdraw a customer account.
-            t.HasCheckConstraint("ck_accounts_customer_balance_non_negative", "type <> 'Customer' OR balance >= 0");
-            t.HasCheckConstraint("ck_accounts_blocked_balance_valid", "blocked_balance >= 0 AND (type <> 'Customer' OR blocked_balance <= balance)");
+            // Defense in depth: even a bug in the application cannot take a customer below the overdraft limit.
+            t.HasCheckConstraint("ck_accounts_customer_balance_within_overdraft", "type <> 'Customer' OR balance >= -overdraft_limit");
+            t.HasCheckConstraint("ck_accounts_blocked_balance_valid",
+                "blocked_balance >= 0 AND overdraft_limit >= 0 AND (type <> 'Customer' OR blocked_balance <= balance + overdraft_limit)");
         });
         b.HasOne<User>().WithOne().HasForeignKey<Account>(a => a.UserId);
         b.HasIndex(a => a.UserId).IsUnique();
@@ -41,21 +42,31 @@ internal class AccountConfiguration : IEntityTypeConfiguration<Account>
         b.Property(a => a.SystemName).HasMaxLength(100);
         b.Property(a => a.Balance).HasPrecision(18, 2);
         b.Property(a => a.BlockedBalance).HasPrecision(18, 2);
+        b.Property(a => a.OverdraftLimit).HasPrecision(18, 2);
         b.Ignore(a => a.AvailableBalance);
+        b.Ignore(a => a.SpendingPower);
+        b.Ignore(a => a.OverdraftUsed);
 
-        b.HasData(new
-        {
-            Id = SystemAccounts.Cash,
-            Type = AccountType.System,
-            Number = 1L,
-            SystemName = "Caixa",
-            Status = AccountStatus.Active,
-            Tier = AccountTier.Basic,
-            Balance = 0m,
-            BlockedBalance = 0m,
-            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-        });
+        b.HasData(
+            System(SystemAccounts.Cash, 1, "Caixa"),
+            System(SystemAccounts.LoanPortfolio, 2, "Carteira de crédito"),
+            System(SystemAccounts.CreditRevenue, 3, "Receitas de crédito"),
+            System(SystemAccounts.IofPayable, 4, "IOF a recolher"));
     }
+
+    private static object System(Guid id, long number, string name) => new
+    {
+        Id = id,
+        Type = AccountType.System,
+        Number = number,
+        SystemName = name,
+        Status = AccountStatus.Active,
+        Tier = AccountTier.Basic,
+        Balance = 0m,
+        BlockedBalance = 0m,
+        OverdraftLimit = 0m,
+        CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+    };
 }
 
 internal class BalanceHoldConfiguration : IEntityTypeConfiguration<BalanceHold>

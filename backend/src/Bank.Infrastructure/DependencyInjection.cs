@@ -46,6 +46,7 @@ public static class DependencyInjection
         // Free Community license: fine for this non-commercial portfolio project.
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         services.AddSingleton<IReceiptRenderer, QuestPdfReceiptRenderer>();
+        services.AddSingleton<Application.Credit.ILoanContractRenderer, QuestPdfLoanContractRenderer>();
         services.AddHttpClient<ICepLookup, ViaCepLookup>(c =>
         {
             c.BaseAddress = new Uri(configuration["ViaCep:BaseUrl"] ?? "https://viacep.com.br/");

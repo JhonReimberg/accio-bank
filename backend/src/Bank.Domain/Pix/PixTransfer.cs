@@ -54,7 +54,7 @@ public class PixTransfer : Entity
         if (now - CreatedAt > RefundWindow)
             throw new DomainException("pix.refund_expired", "O prazo de 90 dias para devolução deste PIX terminou.");
         if (amount > RefundableAmount)
-            throw new DomainException("pix.refund_exceeds", $"Só é possível devolver até {RefundableAmount:N2}.");
+            throw new DomainException("pix.refund_exceeds", $"Só é possível devolver até {Money.Brl(RefundableAmount)}.");
         RefundedAmount += amount;
         var refund = PixRefund.Create(Id, amount, reason, ledgerTransactionId, EndToEnd.New('D', now, random), now);
         _refunds.Add(refund);

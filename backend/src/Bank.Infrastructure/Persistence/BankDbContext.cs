@@ -4,6 +4,7 @@ using Bank.Application.Common;
 using Bank.Domain.Accounts;
 using Bank.Domain.Auditing;
 using Bank.Domain.Common;
+using Bank.Domain.Credit;
 using Bank.Domain.Customers;
 using Bank.Domain.Ledger;
 using Bank.Domain.Notifications;
@@ -36,6 +37,10 @@ public class BankDbContext(DbContextOptions<BankDbContext> options, TimeProvider
     public DbSet<PixLimitSettings> PixLimits => Set<PixLimitSettings>();
     public DbSet<PixSchedule> PixSchedules => Set<PixSchedule>();
     public DbSet<PixContact> PixContacts => Set<PixContact>();
+    public DbSet<CreditPolicy> CreditPolicies => Set<CreditPolicy>();
+    public DbSet<CreditScore> CreditScores => Set<CreditScore>();
+    public DbSet<Loan> Loans => Set<Loan>();
+    public DbSet<LoanInstallment> LoanInstallments => Set<LoanInstallment>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();

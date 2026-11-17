@@ -53,7 +53,16 @@ public class Account : Entity
     public DateTime CreatedAt { get; private set; }
     public DateTime? ActivatedAt { get; private set; }
 
+    /// <summary>Cheque especial: how far below zero the balance may go.</summary>
+    public decimal OverdraftLimit { get; private set; }
+
+    /// <summary>Own money that can be spent (excludes the overdraft limit).</summary>
     public decimal AvailableBalance => Balance - BlockedBalance;
+
+    /// <summary>What can be spent right now, counting the unused part of the overdraft limit.</summary>
+    public decimal SpendingPower => AvailableBalance + OverdraftLimit;
+
+    public decimal OverdraftUsed => Balance < 0 ? -Balance : 0;
 
     public static Account OpenCustomer(Guid userId, DateTime now) =>
         new() { Type = AccountType.Customer, UserId = userId, Status = AccountStatus.PendingReview, Tier = AccountTier.Basic, CreatedAt = now };
@@ -82,10 +91,32 @@ public class Account : Entity
         if (Type == AccountType.Customer)
         {
             EnsureCanSend();
-            if (AvailableBalance < amount)
+            if (SpendingPower < amount)
                 throw new DomainException("account.insufficient_funds", "Saldo insuficiente.");
         }
         Balance -= amount;
+    }
+
+    /// <summary>
+    /// Bank-initiated charges (overdraft interest): debited even from a blocked account, never beyond the limit.
+    /// Returns what could actually be charged.
+    /// </summary>
+    internal decimal ApplyCharge(decimal amount)
+    {
+        var charged = Math.Min(amount, Math.Max(0, SpendingPower));
+        Balance -= charged;
+        return charged;
+    }
+
+    public void SetOverdraftLimit(decimal limit)
+    {
+        if (Type != AccountType.Customer || Status != AccountStatus.Active)
+            throw new DomainException("account.not_active", "Só contas ativas podem ter cheque especial.");
+        if (limit < 0 || Money.Round(limit) != limit)
+            throw new DomainException("overdraft.invalid", "Limite inválido.");
+        if (limit < OverdraftUsed)
+            throw new DomainException("overdraft.below_usage", "O limite não pode ficar abaixo do valor já utilizado do cheque especial.");
+        OverdraftLimit = limit;
     }
 
     public void EnsureCanSend()
